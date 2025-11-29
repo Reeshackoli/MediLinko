@@ -1,0 +1,96 @@
+// Updated Profile Wizard Provider with Real API Integration
+// Replace the content of lib/providers/profile_wizard_provider.dart with this
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/user_model.dart';
+import '../services/profile_service.dart';
+
+final profileWizardProvider = StateNotifierProvider<ProfileWizardNotifier, Map<String, dynamic>>((ref) {
+  return ProfileWizardNotifier();
+});
+
+class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
+  ProfileWizardNotifier() : super({});
+
+  // Update a single field
+  void updateField(String key, dynamic value) {
+    state = {...state, key: value};
+    
+    // Auto-save to backend after each update (optional)
+    _autoSaveStep();
+  }
+
+  // Update multiple fields at once
+  void updateMultipleFields(Map<String, dynamic> fields) {
+    state = {...state, ...fields};
+    
+    // Auto-save to backend after updates (optional)
+    _autoSaveStep();
+  }
+
+  // Auto-save current step to backend (debounced in production)
+  Future<void> _autoSaveStep() async {
+    // Optional: Add debouncing to avoid too many API calls
+    // For now, save immediately
+    if (state.isNotEmpty) {
+      await ProfileService.updateWizardStep(state);
+    }
+  }
+
+  // Complete profile wizard and save all data
+  Future<String?> completeProfile(UserModel currentUser) async {
+    try {
+      // Mark profile as complete
+      final completeData = {
+        ...state,
+        'isProfileComplete': true,
+      };
+
+      final response = await ProfileService.updateProfile(completeData);
+
+      if (response['success']) {
+        clearData(); // Clear wizard state
+        return null; // Success - no error
+      } else {
+        return response['message'] ?? 'Failed to complete profile';
+      }
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  // Save current step without completing
+  Future<String?> saveStep() async {
+    try {
+      final response = await ProfileService.updateWizardStep(state);
+      
+      if (response['success']) {
+        return null; // Success
+      } else {
+        return response['message'] ?? 'Failed to save step';
+      }
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  // Load existing profile data from backend
+  Future<void> loadProfileData() async {
+    try {
+      final response = await ProfileService.getProfile();
+      
+      if (response['success'] && response['data'] != null) {
+        // Merge existing profile data into state
+        final profileData = response['data'] as Map<String, dynamic>;
+        state = {...state, ...profileData};
+      }
+    } catch (e) {
+      // Silently fail - user can re-enter data
+    }
+  }
+
+  // Clear all wizard data
+  void clearData() {
+    state = {};
+  }
+}

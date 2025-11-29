@@ -46,24 +46,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      await ref.read(authProvider.notifier).login(
+      final error = await ref.read(authProvider.notifier).login(
             _emailController.text.trim(),
             _passwordController.text,
           );
 
+      if (error != null) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       final user = ref.read(currentUserProvider);
       if (mounted && user != null) {
-        // Navigate to appropriate dashboard based on role
-        switch (user.role) {
-          case UserRole.user:
-            context.go('/user-dashboard');
-            break;
-          case UserRole.doctor:
-            context.go('/doctor-dashboard');
-            break;
-          case UserRole.pharmacist:
-            context.go('/pharmacist-dashboard');
-            break;
+        // Check if profile is complete
+        if (!user.isProfileComplete) {
+          // Navigate to profile wizard to complete setup
+          context.go('/profile-wizard');
+        } else {
+          // Navigate to appropriate dashboard based on role
+          switch (user.role) {
+            case UserRole.user:
+              context.go('/user-dashboard');
+              break;
+            case UserRole.doctor:
+              context.go('/doctor-dashboard');
+              break;
+            case UserRole.pharmacist:
+              context.go('/pharmacist-dashboard');
+              break;
+          }
         }
       }
     }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/health_profile_provider.dart';
 
 class UserDashboardScreen extends ConsumerWidget {
   const UserDashboardScreen({super.key});
@@ -10,6 +11,7 @@ class UserDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final healthProfileAsync = ref.watch(healthProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -118,16 +120,44 @@ class UserDashboardScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            _InfoCard(
-              title: 'Blood Group',
-              value: user?.bloodGroup ?? 'Not set',
-              icon: Icons.bloodtype,
-            ),
-            const SizedBox(height: 12),
-            _InfoCard(
-              title: 'Emergency Contact',
-              value: user?.emergencyContactName ?? 'Not set',
-              icon: Icons.emergency,
+            healthProfileAsync.when(
+              data: (profile) {
+                final bloodGroup = profile?['bloodGroup'] as String?;
+                final emergencyContact = profile?['emergencyContact'] as Map<String, dynamic>?;
+                final emergencyName = emergencyContact?['name'] as String?;
+                
+                return Column(
+                  children: [
+                    _InfoCard(
+                      title: 'Blood Group',
+                      value: bloodGroup ?? 'Not set',
+                      icon: Icons.bloodtype,
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoCard(
+                      title: 'Emergency Contact',
+                      value: emergencyName ?? 'Not set',
+                      icon: Icons.emergency,
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Column(
+                children: [
+                  _InfoCard(
+                    title: 'Blood Group',
+                    value: 'Not set',
+                    icon: Icons.bloodtype,
+                  ),
+                  const SizedBox(height: 12),
+                  _InfoCard(
+                    title: 'Emergency Contact',
+                    value: 'Not set',
+                    icon: Icons.emergency,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

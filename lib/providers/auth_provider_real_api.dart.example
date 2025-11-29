@@ -1,0 +1,109 @@
+// Updated Authentication Provider with Real API Integration
+// Replace the content of lib/providers/auth_provider.dart with this
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/user_model.dart';
+import '../models/user_role.dart';
+import '../services/auth_service.dart';
+
+final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>((ref) {
+  return AuthNotifier();
+});
+
+class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
+  AuthNotifier() : super(const AsyncValue.data(null));
+
+  // Register user with real API
+  Future<String?> register({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String password,
+    required UserRole role,
+  }) async {
+    state = const AsyncValue.loading();
+    
+    try {
+      final response = await AuthService.register(
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        password: password,
+        role: role,
+      );
+
+      if (response.success && response.data != null) {
+        // Parse user data from response
+        final userData = response.data!['user'];
+        final user = UserModel.fromJson(userData);
+        
+        state = AsyncValue.data(user);
+        return null; // Success - no error
+      } else {
+        state = AsyncValue.error(response.message ?? 'Registration failed', StackTrace.current);
+        return response.message ?? 'Registration failed';
+      }
+    } catch (e) {
+      state = AsyncValue.error(e.toString(), StackTrace.current);
+      return e.toString();
+    }
+  }
+
+  // Login user with real API
+  Future<String?> login({
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncValue.loading();
+    
+    try {
+      final response = await AuthService.login(
+        email: email,
+        password: password,
+      );
+
+      if (response.success && response.data != null) {
+        // Parse user data from response
+        final userData = response.data!['user'];
+        final user = UserModel.fromJson(userData);
+        
+        state = AsyncValue.data(user);
+        return null; // Success - no error
+      } else {
+        state = AsyncValue.error(response.message ?? 'Login failed', StackTrace.current);
+        return response.message ?? 'Login failed';
+      }
+    } catch (e) {
+      state = AsyncValue.error(e.toString(), StackTrace.current);
+      return e.toString();
+    }
+  }
+
+  // Logout user
+  Future<void> logout() async {
+    await AuthService.logout();
+    state = const AsyncValue.data(null);
+  }
+
+  // Update user data (e.g., after profile wizard)
+  void updateUser(UserModel user) {
+    state = AsyncValue.data(user);
+  }
+
+  // Get current user from API
+  Future<void> loadCurrentUser() async {
+    state = const AsyncValue.loading();
+    
+    try {
+      final response = await AuthService.getMe();
+      
+      if (response.success && response.data != null) {
+        state = AsyncValue.data(response.data);
+      } else {
+        state = const AsyncValue.data(null);
+      }
+    } catch (e) {
+      state = const AsyncValue.data(null);
+    }
+  }
+}

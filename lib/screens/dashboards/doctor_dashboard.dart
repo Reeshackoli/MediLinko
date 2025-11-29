@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/doctor_profile_provider.dart';
 
 class DoctorDashboardScreen extends ConsumerWidget {
   const DoctorDashboardScreen({super.key});
@@ -10,6 +11,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final doctorProfileAsync = ref.watch(doctorProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -52,35 +54,69 @@ class DoctorDashboardScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Dr. ${user?.fullName ?? 'Doctor'}',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              Text(
-                                user?.specialization ?? 'Specialist',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
+                          child: doctorProfileAsync.when(
+                            data: (profile) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dr. ${user?.fullName ?? 'Doctor'}',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                Text(
+                                  profile['specialization'] ?? 'Specialist',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                            loading: () => const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircularProgressIndicator(),
+                              ],
+                            ),
+                            error: (_, __) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dr. ${user?.fullName ?? 'Doctor'}',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const Text('Specialist'),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _StatChip(
-                          label: 'Experience',
-                          value: '${user?.experience ?? '0'} years',
-                        ),
-                        _StatChip(
-                          label: 'Fee',
-                          value: '₹${user?.consultationFee ?? '0'}',
-                        ),
-                      ],
+                    doctorProfileAsync.when(
+                      data: (profile) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _StatChip(
+                            label: 'Experience',
+                            value: '${profile['experience'] ?? '0'} years',
+                          ),
+                          _StatChip(
+                            label: 'Fee',
+                            value: '₹${profile['consultationFee'] ?? '0'}',
+                          ),
+                        ],
+                      ),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _StatChip(
+                            label: 'Experience',
+                            value: '0 years',
+                          ),
+                          _StatChip(
+                            label: 'Fee',
+                            value: '₹0',
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -139,10 +175,22 @@ class DoctorDashboardScreen extends ConsumerWidget {
               onTap: () {},
             ),
             const SizedBox(height: 12),
-            _ActionButton(
-              icon: Icons.location_on_outlined,
-              title: 'Clinic: ${user?.clinicName ?? 'Not set'}',
-              onTap: () {},
+            doctorProfileAsync.when(
+              data: (profile) => _ActionButton(
+                icon: Icons.location_on_outlined,
+                title: 'Clinic: ${profile['clinicName'] ?? 'Not set'}',
+                onTap: () {},
+              ),
+              loading: () => _ActionButton(
+                icon: Icons.location_on_outlined,
+                title: 'Clinic: Loading...',
+                onTap: () {},
+              ),
+              error: (_, __) => _ActionButton(
+                icon: Icons.location_on_outlined,
+                title: 'Clinic: Not set',
+                onTap: () {},
+              ),
             ),
           ],
         ),

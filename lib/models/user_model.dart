@@ -148,4 +148,105 @@ class UserModel {
       deliveryRadius: deliveryRadius ?? this.deliveryRadius,
     );
   }
+
+  // Factory constructor for creating UserModel from JSON
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Parse role from string
+    UserRole role;
+    try {
+      role = UserRole.values.firstWhere(
+        (e) => e.name == json['role'],
+        orElse: () => UserRole.user,
+      );
+    } catch (e) {
+      role = UserRole.user;
+    }
+
+    return UserModel(
+      id: json['_id'] ?? json['id'] ?? '',
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
+      role: role,
+      isProfileComplete: json['isProfileComplete'] ?? false,
+      ageOrDob: json['ageOrDob'],
+      gender: json['gender'],
+      city: json['city'],
+      bloodGroup: json['bloodGroup'],
+      allergies: json['allergies'] != null
+          ? List<String>.from(json['allergies'])
+          : null,
+      medicalConditions: json['medicalConditions'] != null
+          ? List<String>.from(json['medicalConditions'])
+          : null,
+      currentMedicines: json['currentMedicines'] != null
+          ? List<String>.from(json['currentMedicines'])
+          : null,
+      emergencyContactName: json['emergencyContactName'],
+      relationship: json['relationship'],
+      emergencyPhone: json['emergencyPhone'],
+      experience: json['experience'],
+      specialization: json['specialization'],
+      clinicName: json['clinicName'],
+      fullAddress: json['fullAddress'],
+      pincode: json['pincode'],
+      consultationFee: json['consultationFee'],
+      licenseNumber: json['licenseNumber'],
+      documentUrl: json['documentUrl'],
+      availableDays: json['availableDays'] != null
+          ? List<String>.from(json['availableDays'])
+          : null,
+      timeSlots: json['timeSlots'] != null
+          ? List<String>.from(json['timeSlots'])
+          : null,
+      altPhone: json['altPhone'],
+      pharmacyName: json['pharmacyName'],
+      openingTime: json['openingTime'],
+      closingTime: json['closingTime'],
+      pharmacyLicenseNumber: json['pharmacyLicenseNumber'],
+      servicesOffered: json['servicesOffered'] != null
+          ? List<String>.from(json['servicesOffered'])
+          : null,
+      deliveryRadius: json['deliveryRadius'],
+    );
+  }
+
+  // Convert UserModel to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'role': role.name,
+      'isProfileComplete': isProfileComplete,
+      'ageOrDob': ageOrDob,
+      'gender': gender,
+      'city': city,
+      'bloodGroup': bloodGroup,
+      'allergies': allergies,
+      'medicalConditions': medicalConditions,
+      'currentMedicines': currentMedicines,
+      'emergencyContactName': emergencyContactName,
+      'relationship': relationship,
+      'emergencyPhone': emergencyPhone,
+      'experience': experience,
+      'specialization': specialization,
+      'clinicName': clinicName,
+      'fullAddress': fullAddress,
+      'pincode': pincode,
+      'consultationFee': consultationFee,
+      'licenseNumber': licenseNumber,
+      'documentUrl': documentUrl,
+      'availableDays': availableDays,
+      'timeSlots': timeSlots,
+      'altPhone': altPhone,
+      'pharmacyName': pharmacyName,
+      'openingTime': openingTime,
+      'closingTime': closingTime,
+      'pharmacyLicenseNumber': pharmacyLicenseNumber,
+      'servicesOffered': servicesOffered,
+      'deliveryRadius': deliveryRadius,
+    };
+  }
 }

@@ -87,10 +87,22 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         isProfileComplete: false,
       );
 
-      await ref.read(authProvider.notifier).register(user);
+      final error = await ref.read(authProvider.notifier).register(user, _passwordController.text);
 
       if (mounted) {
-        context.go('/profile-wizard');
+        if (error != null) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          // Registration successful, go to profile wizard
+          context.go('/profile-wizard');
+        }
       }
     }
   }

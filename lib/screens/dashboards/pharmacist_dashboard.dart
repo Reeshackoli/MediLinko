@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/pharmacist_profile_provider.dart';
 
 class PharmacistDashboardScreen extends ConsumerWidget {
   const PharmacistDashboardScreen({super.key});
@@ -10,6 +11,7 @@ class PharmacistDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final pharmacistProfileAsync = ref.watch(pharmacistProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,48 +55,76 @@ class PharmacistDashboardScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.pharmacyName ?? 'Pharmacy',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              Text(
-                                user?.city ?? 'Location',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
+                          child: pharmacistProfileAsync.when(
+                            data: (profile) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  profile['storeName'] ?? 'Pharmacy',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                Text(
+                                  profile['storeAddress']?['city'] ?? 'Location',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                            loading: () => const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircularProgressIndicator(),
+                              ],
+                            ),
+                            error: (_, __) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user?.fullName ?? 'Pharmacy',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const Text('Location'),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (user?.openingTime != null && user?.closingTime != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.access_time,
-                              size: 20,
-                              color: AppTheme.primaryBlue,
+                    pharmacistProfileAsync.when(
+                      data: (profile) {
+                        final openingTime = profile['operatingHours']?['opening'];
+                        final closingTime = profile['operatingHours']?['closing'];
+                        if (openingTime != null && closingTime != null) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${user?.openingTime} - ${user?.closingTime}',
-                              style: const TextStyle(
-                                color: AppTheme.primaryBlue,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time,
+                                  size: 20,
+                                  color: AppTheme.primaryBlue,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '$openingTime - $closingTime',
+                                  style: const TextStyle(
+                                    color: AppTheme.primaryBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),
@@ -134,23 +164,33 @@ class PharmacistDashboardScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            if (user?.servicesOffered != null && user!.servicesOffered!.isNotEmpty)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: user.servicesOffered!.map((service) {
-                  return Chip(
-                    label: Text(service),
-                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                    labelStyle: const TextStyle(color: AppTheme.primaryBlue),
+            pharmacistProfileAsync.when(
+              data: (profile) {
+                final services = profile['servicesOffered'] as List?;
+                if (services != null && services.isNotEmpty) {
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: services.map((service) {
+                      return Chip(
+                        label: Text(service.toString()),
+                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                        labelStyle: const TextStyle(color: AppTheme.primaryBlue),
+                      );
+                    }).toList(),
                   );
-                }).toList(),
-              )
-            else
-              Text(
-                'No services configured',
-                style: Theme.of(context).textTheme.bodyMedium,
+                }
+                return const Text(
+                  'No services listed',
+                  style: TextStyle(color: Colors.grey),
+                );
+              },
+              loading: () => const CircularProgressIndicator(),
+              error: (_, __) => const Text(
+                'No services listed',
+                style: TextStyle(color: Colors.grey),
               ),
+            ),
             const SizedBox(height: 24),
             // Quick Actions
             Text(
@@ -176,12 +216,21 @@ class PharmacistDashboardScreen extends ConsumerWidget {
               onTap: () {},
             ),
             const SizedBox(height: 12),
-            if (user?.deliveryRadius != null)
-              _ActionButton(
-                icon: Icons.location_searching,
-                title: 'Delivery Radius: ${user?.deliveryRadius} km',
-                onTap: () {},
-              ),
+            pharmacistProfileAsync.when(
+              data: (profile) {
+                final deliveryRadius = profile['deliveryRadius'];
+                if (deliveryRadius != null) {
+                  return _ActionButton(
+                    icon: Icons.location_searching,
+                    title: 'Delivery Radius: $deliveryRadius km',
+                    onTap: () {},
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
           ],
         ),
       ),

@@ -112,25 +112,47 @@ class ProfileWizardScreen extends ConsumerWidget {
     }
   }
 
-  void _completeWizard(BuildContext context, WidgetRef ref, user) {
-    final updatedUser =
-        ref.read(profileWizardProvider.notifier).buildUserProfile(user);
+  void _completeWizard(BuildContext context, WidgetRef ref, user) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
 
+    final error = await ref.read(profileWizardProvider.notifier).buildUserProfile(user);
+    
+    // Dismiss loading
+    if (context.mounted) Navigator.pop(context);
+
+    if (error != null) {
+      // Show error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    // Success - update local user and navigate
+    final updatedUser = ref.read(profileWizardProvider.notifier).buildLocalUserModel(user);
     ref.read(authProvider.notifier).updateUser(updatedUser);
-    ref.read(profileWizardProvider.notifier).clearData();
     ref.read(wizardStepProvider.notifier).state = 0;
 
     // Navigate to appropriate dashboard
-    switch (user.role) {
-      case UserRole.user:
-        context.go('/user-dashboard');
-        break;
-      case UserRole.doctor:
-        context.go('/doctor-dashboard');
-        break;
-      case UserRole.pharmacist:
-        context.go('/pharmacist-dashboard');
-        break;
+    if (context.mounted) {
+      switch (user.role) {
+        case UserRole.user:
+          context.go('/user-dashboard');
+          break;
+        case UserRole.doctor:
+          context.go('/doctor-dashboard');
+          break;
+        case UserRole.pharmacist:
+          context.go('/pharmacist-dashboard');
+          break;
+      }
     }
   }
 }
