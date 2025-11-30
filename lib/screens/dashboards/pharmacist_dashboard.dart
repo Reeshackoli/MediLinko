@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pharmacist_profile_provider.dart';
+import '../../providers/medicine_provider.dart';
 
 class PharmacistDashboardScreen extends ConsumerWidget {
   const PharmacistDashboardScreen({super.key});
@@ -130,6 +131,69 @@ class PharmacistDashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Medicine Stock Stats
+            Text(
+              'Medicine Stock',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, child) {
+                final medicineStatsAsync = ref.watch(medicineStatsProvider);
+                return medicineStatsAsync.when(
+                  data: (stats) => Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              title: 'Total Medicines',
+                              value: '${stats['totalMedicines']}',
+                              icon: Icons.medical_services,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _StatCard(
+                              title: 'Stock Value',
+                              value: '₹${stats['totalValue'].toStringAsFixed(0)}',
+                              icon: Icons.currency_rupee,
+                              color: AppTheme.successColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              title: 'Low Stock',
+                              value: '${stats['lowStockCount']}',
+                              icon: Icons.warning_amber_rounded,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _StatCard(
+                              title: 'Expiring Soon',
+                              value: '${stats['expiringCount']}',
+                              icon: Icons.access_time,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (_, __) => const SizedBox.shrink(),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
             // Today's Stats
             Text(
               "Today's Stats",
@@ -199,9 +263,9 @@ class PharmacistDashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _ActionButton(
-              icon: Icons.inventory,
-              title: 'Manage Inventory',
-              onTap: () {},
+              icon: Icons.medical_services,
+              title: 'Manage Medicine Stock',
+              onTap: () => context.push('/pharmacist/medicines'),
             ),
             const SizedBox(height: 12),
             _ActionButton(

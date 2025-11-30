@@ -8,6 +8,8 @@ import '../../screens/profile_wizard/profile_wizard_screen.dart';
 import '../../screens/dashboards/user_dashboard.dart';
 import '../../screens/dashboards/doctor_dashboard.dart';
 import '../../screens/dashboards/pharmacist_dashboard.dart';
+import '../../screens/medicine_stock/medicine_list_screen.dart';
+import '../../screens/medicine_stock/add_medicine_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -46,6 +48,14 @@ final router = GoRouter(
     GoRoute(
       path: '/pharmacist-dashboard',
       builder: (context, state) => const PharmacistDashboardScreen(),
+    ),
+    GoRoute(
+      path: '/pharmacist/medicines',
+      builder: (context, state) => const MedicineListScreen(),
+    ),
+    GoRoute(
+      path: '/pharmacist/medicines/add',
+      builder: (context, state) => const AddMedicineScreen(),
     ),
   ],
 );
