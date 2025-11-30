@@ -41,21 +41,8 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
         'isProfileComplete': true,
       };
 
-      // Transform emergency contact fields for user role
-      if (baseUser.role == UserRole.user) {
-        // Convert flat emergency contact fields to nested structure
-        if (state.containsKey('emergencyContactName') || 
-            state.containsKey('emergencyPhone')) {
-          completeData['emergencyContact'] = {
-            'name': state['emergencyContactName'],
-            'phone': state['emergencyPhone'],
-          };
-          // Remove old flat fields
-          completeData.remove('emergencyContactName');
-          completeData.remove('emergencyPhone');
-          completeData.remove('relationship');
-        }
-      }
+      // No transformation needed for user emergency contact fields
+      // Backend now uses flat fields: emergencyContactName, emergencyContactRelationship, emergencyContactPhone
       
       // Transform clinic address for doctor role
       if (baseUser.role == UserRole.doctor) {
@@ -150,8 +137,8 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
           medicalConditions: state['medicalConditions'] as List<String>?,
           currentMedicines: state['currentMedicines'] as List<String>?,
           emergencyContactName: state['emergencyContactName'] as String?,
-          relationship: state['relationship'] as String?,
-          emergencyPhone: state['emergencyPhone'] as String?,
+          relationship: state['emergencyContactRelationship'] as String?,
+          emergencyPhone: state['emergencyContactPhone'] as String?,
           isProfileComplete: true,
         );
 

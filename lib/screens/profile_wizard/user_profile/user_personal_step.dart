@@ -11,6 +11,8 @@ class UserPersonalStep extends ConsumerStatefulWidget {
 }
 
 class _UserPersonalStepState extends ConsumerState<UserPersonalStep> {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _ageController = TextEditingController();
   final _cityController = TextEditingController();
   String? _selectedGender;
@@ -19,21 +21,28 @@ class _UserPersonalStepState extends ConsumerState<UserPersonalStep> {
   void initState() {
     super.initState();
     final data = ref.read(profileWizardProvider);
-    _ageController.text = data['ageOrDob'] ?? '';
+    _firstNameController.text = data['firstName'] ?? '';
+    _lastNameController.text = data['lastName'] ?? '';
+    _ageController.text = data['age']?.toString() ?? '';
     _cityController.text = data['city'] ?? '';
     _selectedGender = data['gender'];
   }
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _ageController.dispose();
     _cityController.dispose();
     super.dispose();
   }
 
   void _saveData() {
+    final ageValue = int.tryParse(_ageController.text);
     ref.read(profileWizardProvider.notifier).updateMultipleFields({
-      'ageOrDob': _ageController.text,
+      'firstName': _firstNameController.text,
+      'lastName': _lastNameController.text,
+      'age': ageValue,
       'city': _cityController.text,
       'gender': _selectedGender,
     });
@@ -57,10 +66,30 @@ class _UserPersonalStepState extends ConsumerState<UserPersonalStep> {
           ),
           const SizedBox(height: 32),
           TextFormField(
+            controller: _firstNameController,
+            decoration: const InputDecoration(
+              labelText: 'First Name',
+              prefixIcon: Icon(Icons.person),
+            ),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (value) => _saveData(),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _lastNameController,
+            decoration: const InputDecoration(
+              labelText: 'Last Name',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (value) => _saveData(),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
             controller: _ageController,
             decoration: const InputDecoration(
               labelText: 'Age',
-              prefixIcon: Icon(Icons.calendar_today),
+              prefixIcon: Icon(Icons.cake),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) => _saveData(),

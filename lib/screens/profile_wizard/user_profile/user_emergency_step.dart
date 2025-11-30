@@ -20,8 +20,8 @@ class _UserEmergencyStepState extends ConsumerState<UserEmergencyStep> {
     super.initState();
     final data = ref.read(profileWizardProvider);
     _nameController.text = data['emergencyContactName'] ?? '';
-    _phoneController.text = data['emergencyPhone'] ?? '';
-    _selectedRelationship = data['relationship'];
+    _phoneController.text = data['emergencyContactPhone'] ?? '';
+    _selectedRelationship = data['emergencyContactRelationship'];
   }
 
   @override
@@ -34,8 +34,8 @@ class _UserEmergencyStepState extends ConsumerState<UserEmergencyStep> {
   void _saveData() {
     ref.read(profileWizardProvider.notifier).updateMultipleFields({
       'emergencyContactName': _nameController.text,
-      'emergencyPhone': _phoneController.text,
-      'relationship': _selectedRelationship,
+      'emergencyContactPhone': _phoneController.text,
+      'emergencyContactRelationship': _selectedRelationship,
     });
   }
 

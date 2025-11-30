@@ -7,6 +7,14 @@ const healthProfileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  firstName: {
+    type: String,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    trim: true
+  },
   age: {
     type: Number,
     min: 0,
@@ -15,6 +23,10 @@ const healthProfileSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ['Male', 'Female', 'Other', 'male', 'female', 'other']
+  },
+  city: {
+    type: String,
+    trim: true
   },
   bloodGroup: {
     type: String,
@@ -28,19 +40,21 @@ const healthProfileSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  currentMedicines: [{
+  currentMedications: [{
     type: String,
     trim: true
   }],
-  emergencyContact: {
-    name: {
-      type: String,
-      trim: true
-    },
-    phone: {
-      type: String,
-      match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number']
-    }
+  emergencyContactName: {
+    type: String,
+    trim: true
+  },
+  emergencyContactRelationship: {
+    type: String,
+    trim: true
+  },
+  emergencyContactPhone: {
+    type: String,
+    match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number']
   }
 }, {
   timestamps: true

@@ -35,41 +35,145 @@ class UserDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
-                      child: Text(
-                        user?.fullName.substring(0, 1).toUpperCase() ?? 'U',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryBlue,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            // Welcome & Profile Card
+            healthProfileAsync.when(
+              data: (profile) {
+                final firstName = profile?['firstName'] as String?;
+                final lastName = profile?['lastName'] as String?;
+                
+                final displayName = firstName != null && firstName.isNotEmpty
+                    ? '$firstName ${lastName ?? ''}'.trim()
+                    : user?.fullName ?? 'User';
+                
+                return Card(
+                  child: InkWell(
+                    onTap: () => context.push('/user-dashboard/profile'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
                         children: [
-                          Text(
-                            'Welcome back,',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
+                            child: Text(
+                              displayName.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
                           ),
-                          Text(
-                            user?.fullName ?? 'User',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome back,',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                Text(
+                                  displayName,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: AppTheme.primaryBlue),
+                            onPressed: () => context.push('/user-dashboard/profile/edit'),
+                            tooltip: 'Edit Profile',
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
+                );
+              },
+              loading: () => Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
+                        child: Text(
+                          user?.fullName.substring(0, 1).toUpperCase() ?? 'U',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryBlue,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back,',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Text(
+                              user?.fullName ?? 'User',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const CircularProgressIndicator(),
+                    ],
+                  ),
+                ),
+              ),
+              error: (error, stack) => Card(
+                child: InkWell(
+                  onTap: () => context.push('/user-dashboard/profile'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
+                          child: Text(
+                            user?.fullName.substring(0, 1).toUpperCase() ?? 'U',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome back,',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                user?.fullName ?? 'User',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: AppTheme.primaryBlue),
+                          onPressed: () => context.push('/user-dashboard/profile/edit'),
+                          tooltip: 'Edit Profile',
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -88,6 +192,12 @@ class UserDashboardScreen extends ConsumerWidget {
               crossAxisSpacing: 16,
               children: [
                 _QuickActionCard(
+                  icon: Icons.medication_liquid,
+                  title: 'Medicine Tracker',
+                  color: Colors.green,
+                  onTap: () {},
+                ),
+                _QuickActionCard(
                   icon: Icons.medical_services,
                   title: 'Find Doctors',
                   color: AppTheme.primaryBlue,
@@ -105,59 +215,7 @@ class UserDashboardScreen extends ConsumerWidget {
                   color: Colors.orange,
                   onTap: () {},
                 ),
-                _QuickActionCard(
-                  icon: Icons.medication,
-                  title: 'Prescriptions',
-                  color: Colors.purple,
-                  onTap: () {},
-                ),
               ],
-            ),
-            const SizedBox(height: 24),
-            // Health Records
-            Text(
-              'Health Records',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            healthProfileAsync.when(
-              data: (profile) {
-                final bloodGroup = profile?['bloodGroup'] as String?;
-                final emergencyContact = profile?['emergencyContact'] as Map<String, dynamic>?;
-                final emergencyName = emergencyContact?['name'] as String?;
-                
-                return Column(
-                  children: [
-                    _InfoCard(
-                      title: 'Blood Group',
-                      value: bloodGroup ?? 'Not set',
-                      icon: Icons.bloodtype,
-                    ),
-                    const SizedBox(height: 12),
-                    _InfoCard(
-                      title: 'Emergency Contact',
-                      value: emergencyName ?? 'Not set',
-                      icon: Icons.emergency,
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Column(
-                children: [
-                  _InfoCard(
-                    title: 'Blood Group',
-                    value: 'Not set',
-                    icon: Icons.bloodtype,
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoCard(
-                    title: 'Emergency Contact',
-                    value: 'Not set',
-                    icon: Icons.emergency,
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -199,48 +257,6 @@ class _QuickActionCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-
-  const _InfoCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: AppTheme.primaryBlue),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -10,6 +10,8 @@ import '../../screens/dashboards/doctor_dashboard.dart';
 import '../../screens/dashboards/pharmacist_dashboard.dart';
 import '../../screens/medicine_stock/medicine_list_screen.dart';
 import '../../screens/medicine_stock/add_medicine_screen.dart';
+import '../../screens/profile/user_profile_view_screen.dart';
+import '../../screens/profile/user_profile_edit_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -40,6 +42,14 @@ final router = GoRouter(
     GoRoute(
       path: '/user-dashboard',
       builder: (context, state) => const UserDashboardScreen(),
+    ),
+    GoRoute(
+      path: '/user-dashboard/profile',
+      builder: (context, state) => const UserProfileViewScreen(),
+    ),
+    GoRoute(
+      path: '/user-dashboard/profile/edit',
+      builder: (context, state) => const UserProfileEditScreen(),
     ),
     GoRoute(
       path: '/doctor-dashboard',
