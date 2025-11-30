@@ -1,7 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/profile_service.dart';
 
-final doctorProfileProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final profile = await ProfileService.getProfile();
-  return profile;
+final doctorProfileProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
+  final response = await ProfileService.getProfile();
+  
+  // Extract profile from the response structure: { success: true, data: { user: {...}, profile: {...} } }
+  if (response['success'] == true && response['data'] != null) {
+    return response['data']['profile'] as Map<String, dynamic>?;
+  }
+  
+  return null;
 });

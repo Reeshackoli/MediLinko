@@ -35,90 +35,98 @@ class DoctorDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Card
+            // Profile Card - Clickable
             Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
-                          child: const Icon(
-                            Icons.medical_services,
-                            size: 32,
-                            color: AppTheme.primaryBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: doctorProfileAsync.when(
-                            data: (profile) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dr. ${user?.fullName ?? 'Doctor'}',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Text(
-                                  profile['specialization'] ?? 'Specialist',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                            loading: () => const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CircularProgressIndicator(),
-                              ],
-                            ),
-                            error: (_, __) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dr. ${user?.fullName ?? 'Doctor'}',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const Text('Specialist'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    doctorProfileAsync.when(
-                      data: (profile) => Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: InkWell(
+                onTap: () => context.push('/doctor-dashboard/profile'),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          _StatChip(
-                            label: 'Experience',
-                            value: '${profile['experience'] ?? '0'} years',
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
+                            child: const Icon(
+                              Icons.medical_services,
+                              size: 32,
+                              color: AppTheme.primaryBlue,
+                            ),
                           ),
-                          _StatChip(
-                            label: 'Fee',
-                            value: '₹${profile['consultationFee'] ?? '0'}',
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: doctorProfileAsync.when(
+                              data: (profile) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Dr. ${user?.fullName ?? 'Doctor'}',
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  Text(
+                                    profile?['specialization'] ?? 'Specialist',
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                              loading: () => const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircularProgressIndicator(),
+                                ],
+                              ),
+                              error: (_, __) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Dr. ${user?.fullName ?? 'Doctor'}',
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  const Text('Specialist'),
+                                ],
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: AppTheme.primaryBlue),
+                            onPressed: () => context.push('/doctor-dashboard/profile/edit'),
                           ),
                         ],
                       ),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _StatChip(
-                            label: 'Experience',
-                            value: '0 years',
-                          ),
-                          _StatChip(
-                            label: 'Fee',
-                            value: '₹0',
-                          ),
-                        ],
+                      const SizedBox(height: 16),
+                      doctorProfileAsync.when(
+                        data: (profile) => Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _StatChip(
+                              label: 'Experience',
+                              value: '${profile?['experience'] ?? '0'} years',
+                            ),
+                            _StatChip(
+                              label: 'Fee',
+                              value: '₹${profile?['consultationFee'] ?? '0'}',
+                            ),
+                          ],
+                        ),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (_, __) => Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _StatChip(
+                              label: 'Experience',
+                              value: '0 years',
+                            ),
+                            _StatChip(
+                              label: 'Fee',
+                              value: '₹0',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -178,7 +186,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
             doctorProfileAsync.when(
               data: (profile) => _ActionButton(
                 icon: Icons.location_on_outlined,
-                title: 'Clinic: ${profile['clinicName'] ?? 'Not set'}',
+                title: 'Clinic: ${profile?['clinicName'] ?? 'Not set'}',
                 onTap: () {},
               ),
               loading: () => _ActionButton(
