@@ -36,6 +36,7 @@ app.use(morgan('dev')); // Logging
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/medicines', require('./routes/medicineStockRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {
