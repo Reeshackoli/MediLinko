@@ -38,6 +38,21 @@ exports.updateProfile = async (req, res) => {
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      
+      // Update user model with clinic location for map search
+      if (profileData.clinicLatitude && profileData.clinicLongitude) {
+        const lat = parseFloat(profileData.clinicLatitude);
+        const lng = parseFloat(profileData.clinicLongitude);
+        
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          await User.findByIdAndUpdate(userId, {
+            clinicLatitude: lat,
+            clinicLongitude: lng,
+            'location.coordinates': [lng, lat] // GeoJSON format: [longitude, latitude]
+          });
+          console.log('✅ Updated doctor location:', { lat, lng });
+        }
+      }
     } else if (user.role === 'pharmacist') {
       profile = await PharmacistProfile.findOneAndUpdate(
         { userId },
@@ -145,6 +160,21 @@ exports.updateWizardStep = async (req, res) => {
         { $set: stepData },
         { new: true, upsert: true, runValidators: false }
       );
+      
+      // Update user model with clinic location if provided
+      if (stepData.clinicLatitude && stepData.clinicLongitude) {
+        const lat = parseFloat(stepData.clinicLatitude);
+        const lng = parseFloat(stepData.clinicLongitude);
+        
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          await User.findByIdAndUpdate(userId, {
+            clinicLatitude: lat,
+            clinicLongitude: lng,
+            'location.coordinates': [lng, lat]
+          });
+          console.log('✅ Updated doctor location in wizard step:', { lat, lng });
+        }
+      }
     } else if (user.role === 'pharmacist') {
       profile = await PharmacistProfile.findOneAndUpdate(
         { userId },

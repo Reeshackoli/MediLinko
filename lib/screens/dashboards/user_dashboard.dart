@@ -201,7 +201,7 @@ class UserDashboardScreen extends ConsumerWidget {
                   icon: Icons.medical_services,
                   title: 'Find Doctors',
                   color: AppTheme.primaryBlue,
-                  onTap: () {},
+                  onTap: () => context.push('/doctors-map'),
                 ),
                 _QuickActionCard(
                   icon: Icons.local_pharmacy,

@@ -117,3 +117,90 @@ exports.getPharmacyById = async (req, res) => {
     });
   }
 };
+
+// @desc    Get nearby doctors based on location
+// @route   GET /api/users/doctors/nearby
+// @access  Public
+exports.getNearbyDoctors = async (req, res) => {
+  try {
+    const { lat, lng, radius = 5000, specialization } = req.query;
+
+    // Validate coordinates
+    if (!lat || !lng) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide latitude and longitude'
+      });
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+    const radiusInMeters = parseFloat(radius);
+
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(radiusInMeters)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid coordinate values'
+      });
+    }
+
+    // Build query
+    let query = {
+      role: 'doctor',
+      isProfileComplete: true,
+      clinicLatitude: { $exists: true, $ne: null },
+      clinicLongitude: { $exists: true, $ne: null },
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: radiusInMeters
+        }
+      }
+    };
+
+    // Add specialization filter if provided
+    if (specialization) {
+      query.specialization = new RegExp(specialization, 'i');
+    }
+
+    const doctors = await User.find(query).select('-password');
+
+    // Calculate distance for each doctor
+    const doctorsWithDistance = doctors.map(doctor => {
+      const docObj = doctor.toObject();
+      
+      // Calculate distance using Haversine formula
+      const R = 6371e3; // Earth radius in meters
+      const φ1 = latitude * Math.PI / 180;
+      const φ2 = docObj.clinicLatitude * Math.PI / 180;
+      const Δφ = (docObj.clinicLatitude - latitude) * Math.PI / 180;
+      const Δλ = (docObj.clinicLongitude - longitude) * Math.PI / 180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+
+      return {
+        ...docObj,
+        distance: Math.round(distance) // distance in meters
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: doctorsWithDistance.length,
+      data: doctorsWithDistance
+    });
+  } catch (error) {
+    console.error('Error in getNearbyDoctors:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

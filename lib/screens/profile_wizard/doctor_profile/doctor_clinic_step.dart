@@ -15,6 +15,8 @@ class _DoctorClinicStepState extends ConsumerState<DoctorClinicStep> {
   final _cityController = TextEditingController();
   final _pincodeController = TextEditingController();
   final _feeController = TextEditingController();
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
 
   @override
   void initState() {
@@ -25,6 +27,8 @@ class _DoctorClinicStepState extends ConsumerState<DoctorClinicStep> {
     _cityController.text = data['city'] ?? '';
     _pincodeController.text = data['pincode'] ?? '';
     _feeController.text = data['consultationFee'] ?? '';
+    _latitudeController.text = data['clinicLatitude']?.toString() ?? '';
+    _longitudeController.text = data['clinicLongitude']?.toString() ?? '';
   }
 
   @override
@@ -34,6 +38,8 @@ class _DoctorClinicStepState extends ConsumerState<DoctorClinicStep> {
     _cityController.dispose();
     _pincodeController.dispose();
     _feeController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -44,6 +50,12 @@ class _DoctorClinicStepState extends ConsumerState<DoctorClinicStep> {
       'city': _cityController.text,
       'pincode': _pincodeController.text,
       'consultationFee': _feeController.text,
+      'clinicLatitude': _latitudeController.text.isNotEmpty
+          ? double.tryParse(_latitudeController.text)
+          : null,
+      'clinicLongitude': _longitudeController.text.isNotEmpty
+          ? double.tryParse(_longitudeController.text)
+          : null,
     });
   }
 
@@ -119,6 +131,85 @@ class _DoctorClinicStepState extends ConsumerState<DoctorClinicStep> {
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) => _saveData(),
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text(
+            'Clinic Location (Optional)',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Help patients find your clinic on the map',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _latitudeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Latitude',
+                    prefixIcon: Icon(Icons.my_location),
+                    hintText: 'e.g., 12.9716',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  onChanged: (value) => _saveData(),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  controller: _longitudeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Longitude',
+                    prefixIcon: Icon(Icons.location_on),
+                    hintText: 'e.g., 77.5946',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  onChanged: (value) => _saveData(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4C9AFF).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: const Color(0xFF4C9AFF),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'You can find coordinates using Google Maps or any map service',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -38,10 +38,36 @@ const userSchema = new mongoose.Schema({
   fcmToken: {
     type: String,
     default: null
+  },
+  // Clinic location for doctors (used in map search)
+  clinicLatitude: {
+    type: Number,
+    min: -90,
+    max: 90
+  },
+  clinicLongitude: {
+    type: Number,
+    min: -180,
+    max: 180
+  },
+  // GeoJSON Point for MongoDB geospatial queries
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: [0, 0]
+    }
   }
 }, {
   timestamps: true
 });
+
+// Create 2dsphere index for geospatial queries
+userSchema.index({ location: '2dsphere' });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {

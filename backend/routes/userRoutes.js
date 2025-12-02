@@ -3,11 +3,13 @@ const {
   getDoctors,
   getPharmacies,
   getDoctorById,
-  getPharmacyById
+  getPharmacyById,
+  getNearbyDoctors
 } = require('../controllers/userController');
 
 const router = express.Router();
 
+router.get('/doctors/nearby', getNearbyDoctors);
 router.get('/doctors', getDoctors);
 router.get('/doctors/:id', getDoctorById);
 router.get('/pharmacies', getPharmacies);

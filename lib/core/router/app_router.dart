@@ -14,6 +14,7 @@ import '../../screens/profile/user_profile_view_screen.dart';
 import '../../screens/profile/user_profile_edit_screen.dart';
 import '../../screens/profile/doctor_profile_view_screen.dart';
 import '../../screens/profile/doctor_profile_edit_screen.dart';
+import '../../screens/maps/doctors_map_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -76,6 +77,10 @@ final router = GoRouter(
     GoRoute(
       path: '/pharmacist/medicines/add',
       builder: (context, state) => const AddMedicineScreen(),
+    ),
+    GoRoute(
+      path: '/doctors-map',
+      builder: (context, state) => const DoctorsMapScreen(),
     ),
   ],
 );
