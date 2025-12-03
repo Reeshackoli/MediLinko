@@ -21,9 +21,15 @@ exports.updateProfile = async (req, res) => {
     let profile;
     const profileData = req.body;
     
-    console.log('📝 Profile Update Request:');
-    console.log('User Role:', user.role);
-    console.log('Profile Data:', JSON.stringify(profileData, null, 2));
+    // Only log for doctor profiles with availability data
+    if (user.role === 'doctor' && (profileData.availableTimings || profileData.availableDays)) {
+      console.log('📝 Doctor Profile Update:');
+      if (profileData.availableTimings) {
+        console.log('   ✅ availableTimings count:', profileData.availableTimings.length);
+      } else if (profileData.availableDays || profileData.timeSlots) {
+        console.log('   ⚠️ OLD FORMAT - needs transformation');
+      }
+    }
 
     // Handle profile based on user role
     if (user.role === 'user') {
@@ -38,6 +44,10 @@ exports.updateProfile = async (req, res) => {
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      
+      if (profileData.availableTimings) {
+        console.log('   ✅ Saved timings:', profile?.availableTimings?.length || 0, 'days');
+      }
       
       // Update user model with clinic location for map search
       if (profileData.clinicLatitude && profileData.clinicLongitude) {
@@ -102,9 +112,6 @@ exports.getProfile = async (req, res) => {
     } else if (user.role === 'pharmacist') {
       profile = await PharmacistProfile.findOne({ userId });
     }
-    
-    console.log('📥 Get Profile Response for user:', user.email);
-    console.log('Profile data:', JSON.stringify(profile, null, 2));
 
     res.status(200).json({
       success: true,

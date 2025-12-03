@@ -49,6 +49,18 @@ class ProfileService {
         };
       }
 
+      print('📤 Updating profile with data:');
+      print('   Keys: ${profileData.keys.toList()}');
+      if (profileData.containsKey('availableTimings')) {
+        print('   ✅ availableTimings: ${profileData['availableTimings']}');
+      }
+      if (profileData.containsKey('availableDays')) {
+        print('   ⚠️ OLD FORMAT - availableDays: ${profileData['availableDays']}');
+      }
+      if (profileData.containsKey('timeSlots')) {
+        print('   ⚠️ OLD FORMAT - timeSlots: ${profileData['timeSlots']}');
+      }
+
       final response = await http
           .put(
             Uri.parse(ApiConfig.profile),

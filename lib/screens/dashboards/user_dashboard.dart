@@ -213,7 +213,7 @@ class UserDashboardScreen extends ConsumerWidget {
                   icon: Icons.calendar_today,
                   title: 'Appointments',
                   color: Colors.orange,
-                  onTap: () {},
+                  onTap: () => context.push('/appointments'),
                 ),
               ],
             ),

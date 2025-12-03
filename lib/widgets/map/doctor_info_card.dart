@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/doctor_location_model.dart';
 import '../../providers/map_provider.dart';
 
@@ -136,29 +137,30 @@ class DoctorInfoCard extends ConsumerWidget {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: null, // Disabled for now
+                      onPressed: () {
+                        context.push('/book-appointment', extra: doctor);
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
-                        disabledBackgroundColor: Colors.grey.shade300,
+                        backgroundColor: const Color(0xFF4C9AFF),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 0,
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.calendar_today,
-                            color: Colors.grey.shade600,
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Text(
-                            'Book Appointment (Coming Soon)',
+                            'Book Appointment',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade600,
+                              color: Colors.white,
                             ),
                           ),
                         ],

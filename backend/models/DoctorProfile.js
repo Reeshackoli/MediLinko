@@ -57,8 +57,7 @@ const doctorProfileSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-doctorProfileSchema.index({ userId: 1 });
+// Index for faster queries (userId already indexed by unique: true)
 doctorProfileSchema.index({ specialization: 1 });
 doctorProfileSchema.index({ verificationStatus: 1 });
 

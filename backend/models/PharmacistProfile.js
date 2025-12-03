@@ -46,9 +46,7 @@ const pharmacistProfileSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-pharmacistProfileSchema.index({ userId: 1 });
-pharmacistProfileSchema.index({ licenseNumber: 1 });
+// Index for faster queries (userId and licenseNumber already indexed by unique: true)
 pharmacistProfileSchema.index({ verificationStatus: 1 });
 
 module.exports = mongoose.model('PharmacistProfile', pharmacistProfileSchema);

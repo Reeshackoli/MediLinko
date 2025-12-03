@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/doctor_profile_provider.dart';
+import '../../providers/appointment_provider.dart';
 
 class DoctorDashboardScreen extends ConsumerWidget {
   const DoctorDashboardScreen({super.key});
@@ -12,6 +13,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final doctorProfileAsync = ref.watch(doctorProfileProvider);
+    final statsAsync = ref.watch(doctorStatsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -140,11 +142,25 @@ class DoctorDashboardScreen extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _OverviewCard(
-                    title: 'Appointments',
-                    value: '8',
-                    icon: Icons.calendar_today,
-                    color: AppTheme.primaryBlue,
+                  child: statsAsync.when(
+                    data: (stats) => _OverviewCard(
+                      title: 'Appointments',
+                      value: stats['today']?.toString() ?? '0',
+                      icon: Icons.calendar_today,
+                      color: AppTheme.primaryBlue,
+                    ),
+                    loading: () => const _OverviewCard(
+                      title: 'Appointments',
+                      value: '...',
+                      icon: Icons.calendar_today,
+                      color: AppTheme.primaryBlue,
+                    ),
+                    error: (_, __) => const _OverviewCard(
+                      title: 'Appointments',
+                      value: '0',
+                      icon: Icons.calendar_today,
+                      color: AppTheme.primaryBlue,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -168,7 +184,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
             _ActionButton(
               icon: Icons.calendar_month,
               title: 'Manage Appointments',
-              onTap: () {},
+              onTap: () => context.push('/doctor/appointments'),
             ),
             const SizedBox(height: 12),
             _ActionButton(

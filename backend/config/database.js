@@ -2,7 +2,15 @@ const mongoose = require('mongoose');
 
 const connectDatabase = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    // Optimize mongoose settings for memory efficiency
+    mongoose.set('strictQuery', false);
+    mongoose.set('bufferCommands', false); // Disable command buffering
+    
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      maxPoolSize: 10, // Limit connection pool size
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);

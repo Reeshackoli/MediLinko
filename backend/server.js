@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
+// const morgan = require('morgan'); // Disabled to reduce memory usage
 const dotenv = require('dotenv');
 const connectDatabase = require('./config/database');
 
@@ -30,13 +30,14 @@ app.use(helmet({
 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(morgan('dev')); // Logging
+// app.use(morgan('dev')); // Disabled to reduce memory usage
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/medicines', require('./routes/medicineStockRoutes'));
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

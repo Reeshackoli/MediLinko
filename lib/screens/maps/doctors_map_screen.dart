@@ -22,8 +22,10 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
     super.initState();
     _mapController = MapController();
     
-    // Load location and doctors when screen opens
+    // Load all doctors first (so they all show on map)
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mapProvider.notifier).fetchAllDoctors();
+      // Load location without auto-fetching nearby (to avoid filtering)
       ref.read(mapProvider.notifier).loadCurrentLocation();
     });
   }
@@ -147,10 +149,11 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
     final mapState = ref.watch(mapProvider);
     final currentLocation = mapState.currentLocation;
     
-    // Default center (Bangalore, India)
+    // Default center (Belgaum, Karnataka - where our sample doctors are)
+    // Coordinates: 15.8497, 74.4977
     final initialCenter = currentLocation != null
         ? LatLng(currentLocation.latitude, currentLocation.longitude)
-        : const LatLng(12.9716, 77.5946);
+        : const LatLng(15.8497, 74.4977); // Belgaum center
 
     return Scaffold(
       appBar: AppBar(
@@ -299,13 +302,14 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
 
           // Recenter button
           Positioned(
-            bottom: mapState.selectedDoctor != null ? 220 : 32,
+            bottom: mapState.selectedDoctor != null ? 220 : 100,
             right: 16,
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(16),
               shadowColor: Colors.black.withOpacity(0.15),
               child: FloatingActionButton(
+                heroTag: 'recenterMapFab',
                 onPressed: _recenterMap,
                 backgroundColor: Colors.white,
                 elevation: 0,
@@ -314,6 +318,48 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
                   color: Color(0xFF4C9AFF),
                   size: 26,
                 ),
+              ),
+            ),
+          ),
+
+          // Refresh doctors button
+          Positioned(
+            bottom: mapState.selectedDoctor != null ? 220 : 32,
+            right: 16,
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(16),
+              shadowColor: Colors.black.withOpacity(0.15),
+              child: FloatingActionButton(
+                heroTag: 'refreshDoctorsFab',
+                onPressed: () async {
+                  await ref.read(mapProvider.notifier).fetchAllDoctors();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Found ${mapState.filteredDoctors.length} doctors'),
+                        backgroundColor: const Color(0xFF4C9AFF),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+                backgroundColor: const Color(0xFF4C9AFF),
+                elevation: 0,
+                child: mapState.isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                        size: 26,
+                      ),
               ),
             ),
           ),

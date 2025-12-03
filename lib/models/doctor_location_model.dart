@@ -109,4 +109,21 @@ class DoctorLocationModel {
       timeSlots: timeSlots ?? this.timeSlots,
     );
   }
+
+  /// Convert DoctorLocationModel to DoctorInfo for appointment booking
+  /// DoctorInfo is from appointment_model.dart
+  Map<String, dynamic> toDoctorInfoJson() {
+    return {
+      '_id': id,
+      'fullName': fullName,
+      'email': null, // Not available in location model
+      'phone': null, // Not available in location model
+      'specialization': specialization,
+      'clinicName': clinicName,
+      'clinicAddress': clinicAddress,
+      'consultationFee': consultationFee != null ? num.tryParse(consultationFee!) : null,
+      'clinicLatitude': latitude,
+      'clinicLongitude': longitude,
+    };
+  }
 }

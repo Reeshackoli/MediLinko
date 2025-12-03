@@ -76,8 +76,8 @@ class MapNotifier extends StateNotifier<MapState> {
           isLoadingLocation: false,
         );
         
-        // Automatically fetch nearby doctors after getting location
-        await fetchNearbyDoctors();
+        // Don't automatically fetch nearby - let the caller decide
+        // This allows showing all doctors on map by default
       } else {
         state = state.copyWith(
           isLoadingLocation: false,

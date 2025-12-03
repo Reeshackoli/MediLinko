@@ -15,6 +15,11 @@ import '../../screens/profile/user_profile_edit_screen.dart';
 import '../../screens/profile/doctor_profile_view_screen.dart';
 import '../../screens/profile/doctor_profile_edit_screen.dart';
 import '../../screens/maps/doctors_map_screen.dart';
+import '../../screens/appointments/book_appointment_screen.dart';
+import '../../screens/appointments/appointment_list_screen.dart';
+import '../../screens/appointments/doctor_appointments_screen.dart';
+import '../../models/appointment_model.dart';
+import '../../models/doctor_location_model.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -81,6 +86,33 @@ final router = GoRouter(
     GoRoute(
       path: '/doctors-map',
       builder: (context, state) => const DoctorsMapScreen(),
+    ),
+    GoRoute(
+      path: '/book-appointment',
+      builder: (context, state) {
+        final extra = state.extra;
+        
+        // Handle both DoctorLocationModel (from map) and DoctorInfo (from other sources)
+        DoctorInfo doctor;
+        if (extra is DoctorLocationModel) {
+          // Convert DoctorLocationModel to DoctorInfo
+          doctor = DoctorInfo.fromJson(extra.toDoctorInfoJson());
+        } else if (extra is DoctorInfo) {
+          doctor = extra;
+        } else {
+          throw Exception('Invalid doctor data type');
+        }
+        
+        return BookAppointmentScreen(doctor: doctor);
+      },
+    ),
+    GoRoute(
+      path: '/appointments',
+      builder: (context, state) => const AppointmentListScreen(),
+    ),
+    GoRoute(
+      path: '/doctor/appointments',
+      builder: (context, state) => const DoctorAppointmentsScreen(),
     ),
   ],
 );

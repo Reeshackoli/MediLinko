@@ -60,7 +60,6 @@ const healthProfileSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-healthProfileSchema.index({ userId: 1 });
+// userId already indexed by unique: true - no additional index needed
 
 module.exports = mongoose.model('HealthProfile', healthProfileSchema);

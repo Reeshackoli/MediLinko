@@ -8,25 +8,14 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
 
   void updateField(String key, dynamic value) {
     state = {...state, key: value};
-    // Auto-save to backend
-    _autoSaveStep();
+    // Auto-save disabled to prevent memory issues with multiple tabs
+    // Data is saved when completing the wizard
   }
 
   void updateMultipleFields(Map<String, dynamic> fields) {
     state = {...state, ...fields};
-    // Auto-save to backend
-    _autoSaveStep();
-  }
-
-  // Auto-save step to backend
-  Future<void> _autoSaveStep() async {
-    if (state.isNotEmpty) {
-      try {
-        await ProfileService.updateWizardStep(state);
-      } catch (e) {
-        // Silently fail - data is still in local state
-      }
-    }
+    // Auto-save disabled to prevent memory issues with multiple tabs
+    // Data is saved when completing the wizard
   }
 
   void clearData() {
@@ -58,6 +47,51 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
           completeData.remove('city');
           completeData.remove('pincode');
         }
+        
+        // Convert availableDays and timeSlots to availableTimings format
+        if (state.containsKey('availableDays') && state.containsKey('timeSlots')) {
+          final days = state['availableDays'] as List<dynamic>?;
+          final slots = state['timeSlots'] as List<dynamic>?;
+          
+          print('🔍 Converting availability data:');
+          print('   Days: $days');
+          print('   Slots: $slots');
+          
+          if (days != null && days.isNotEmpty && slots != null && slots.isNotEmpty) {
+            // Parse the time slot string "09:00 - 18:00"
+            String from = '09:00';
+            String to = '18:00';
+            
+            final firstSlot = slots.first.toString();
+            if (firstSlot.contains(' - ')) {
+              final parts = firstSlot.split(' - ');
+              if (parts.length == 2) {
+                from = parts[0].trim();
+                to = parts[1].trim();
+              }
+            }
+            
+            print('   Parsed times: from=$from, to=$to');
+            
+            // Create availableTimings array
+            final availableTimings = days.map((day) => {
+              'day': day.toString(),
+              'from': from,
+              'to': to,
+            }).toList();
+            
+            print('   Created availableTimings: $availableTimings');
+            
+            completeData['availableTimings'] = availableTimings;
+            completeData.remove('availableDays');
+            completeData.remove('timeSlots');
+          } else {
+            print('⚠️ Missing days or slots data');
+          }
+        } else {
+          print('⚠️ No availableDays or timeSlots found in state');
+        }
+        
         // Convert string values to numbers
         if (state.containsKey('experience')) {
           completeData['experience'] = int.tryParse(state['experience'].toString()) ?? 0;
