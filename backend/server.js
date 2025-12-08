@@ -37,6 +37,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/medicines', require('./routes/medicineStockRoutes'));
+app.use('/api/medicine', require('./routes/medicineRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
 // Health check route
