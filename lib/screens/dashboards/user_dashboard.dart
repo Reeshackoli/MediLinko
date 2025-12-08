@@ -195,7 +195,7 @@ class UserDashboardScreen extends ConsumerWidget {
                   icon: Icons.medication_liquid,
                   title: 'Medicine Tracker',
                   color: Colors.green,
-                  onTap: () {},
+                  onTap: () => context.push('/medicine-tracker'),
                 ),
                 _QuickActionCard(
                   icon: Icons.medical_services,

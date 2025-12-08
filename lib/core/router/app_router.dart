@@ -10,6 +10,7 @@ import '../../screens/dashboards/doctor_dashboard.dart';
 import '../../screens/dashboards/pharmacist_dashboard.dart';
 import '../../screens/medicine_stock/medicine_list_screen.dart';
 import '../../screens/medicine_stock/add_medicine_screen.dart';
+import '../../screens/medicine_tracker/medicine_calendar_screen.dart';
 import '../../screens/profile/user_profile_view_screen.dart';
 import '../../screens/profile/user_profile_edit_screen.dart';
 import '../../screens/profile/doctor_profile_view_screen.dart';
@@ -82,6 +83,10 @@ final router = GoRouter(
     GoRoute(
       path: '/pharmacist/medicines/add',
       builder: (context, state) => const AddMedicineScreen(),
+    ),
+    GoRoute(
+      path: '/medicine-tracker',
+      builder: (context, state) => const MedicineCalendarScreen(),
     ),
     GoRoute(
       path: '/doctors-map',

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
-import '../models/user_role.dart';
 import '../services/auth_service.dart';
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {

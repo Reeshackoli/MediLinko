@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/medicine_stock.dart';
+import '../../models/medicine_model.dart';
 import '../../providers/medicine_provider.dart';
 import '../../services/medicine_service.dart';
 import 'package:intl/intl.dart';
