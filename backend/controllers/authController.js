@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
     const { fullName, email, phone, password, role } = req.body;
 
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email }).lean();
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -84,7 +84,6 @@ exports.login = async (req, res) => {
 
     // Check if password matches
     const isMatch = await user.comparePassword(password);
-    console.log(`Password comparison for ${email}: ${isMatch}`);
     if (!isMatch) {
       return res.status(401).json({
         success: false,

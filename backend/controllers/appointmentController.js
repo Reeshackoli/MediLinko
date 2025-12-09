@@ -10,11 +10,7 @@ exports.bookAppointment = async (req, res) => {
     const userId = req.user._id || req.user.id;
     const { doctorId, date, time, symptoms } = req.body;
 
-    console.log('📝 Booking appointment:');
-    console.log('   User ID:', userId);
-    console.log('   Doctor ID:', doctorId);
-    console.log('   Date:', date);
-    console.log('   Time:', time);
+    // Appointment booking - logging disabled to reduce memory
 
     if (!doctorId || !date || !time) {
       return res.status(400).json({
@@ -140,7 +136,7 @@ exports.getDoctorAppointments = async (req, res) => {
       .sort({ date: 1, time: 1 })
       .lean();
 
-    console.log(`📋 Doctor appointments: Found ${appointments.length} for doctorId: ${doctorId}`);
+    // Doctor appointments fetched
 
     res.json({
       success: true,
@@ -373,7 +369,7 @@ exports.getAppointmentStats = async (req, res) => {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    console.log('📅 Today:', today);
+    // Stats calculation
 
     const [totalCount, todayCount, pendingCount, approvedCount] = await Promise.all([
       Appointment.countDocuments({ doctorId }),
@@ -382,7 +378,7 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
 
-    console.log(`✅ Stats - Total: ${totalCount}, Today: ${todayCount}, Pending: ${pendingCount}, Approved: ${approvedCount}`);
+    // Stats calculated
 
     res.json({
       success: true,

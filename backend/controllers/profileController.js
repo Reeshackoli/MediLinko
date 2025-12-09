@@ -23,11 +23,11 @@ exports.updateProfile = async (req, res) => {
     
     // Only log for doctor profiles with availability data
     if (user.role === 'doctor' && (profileData.availableTimings || profileData.availableDays)) {
-      console.log('📝 Doctor Profile Update:');
+      // Doctor profile update
       if (profileData.availableTimings) {
-        console.log('   ✅ availableTimings count:', profileData.availableTimings.length);
+        // Available timings present
       } else if (profileData.availableDays || profileData.timeSlots) {
-        console.log('   ⚠️ OLD FORMAT - needs transformation');
+        // Old format detected
       }
     }
 
@@ -46,7 +46,7 @@ exports.updateProfile = async (req, res) => {
       );
       
       if (profileData.availableTimings) {
-        console.log('   ✅ Saved timings:', profile?.availableTimings?.length || 0, 'days');
+        // Timings saved
       }
       
       // Update user model with clinic location for map search
@@ -60,7 +60,7 @@ exports.updateProfile = async (req, res) => {
             clinicLongitude: lng,
             'location.coordinates': [lng, lat] // GeoJSON format: [longitude, latitude]
           });
-          console.log('✅ Updated doctor location:', { lat, lng });
+          // Location updated
         }
       }
     } else if (user.role === 'pharmacist') {
