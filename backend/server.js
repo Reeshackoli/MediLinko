@@ -68,7 +68,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const HOST = '127.0.0.1'; // Use localhost specifically for Windows
+const HOST = '0.0.0.0'; // Use localhost specifically for Windows
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);

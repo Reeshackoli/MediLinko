@@ -1,8 +1,9 @@
 class ApiConfig {
   // Base URL for API - Change this when deploying to production
-  // 🔧 CURRENT SETUP: Web Browser (Chrome/Edge)
+  // 🔧 CURRENT SETUP: Physical Device
   // Switch to appropriate URL based on your device:
-  static const String baseUrl = 'http://localhost:3000/api'; // ✅ Web Browser
+  //static const String baseUrl = 'http://localhost:3000/api'; // ✅ Web Browser
+  static const String baseUrl = 'http://192.168.29.106:3000/api';
   
   // Available options:
   // For Android Emulator: http://10.0.2.2:3000/api
