@@ -1,25 +1,28 @@
 class ApiConfig {
-  // Base URL for API - Change this when deploying to production
-  // 🔧 CURRENT SETUP: Physical Device
-  // Switch to appropriate URL based on your device:
-  //static const String baseUrl = 'http://localhost:3000/api'; // ✅ Web Browser
-  static const String baseUrl = 'http://192.168.29.106:3000/api';
-  
-  // Available options:
-  // For Android Emulator: http://10.0.2.2:3000/api
-  // For iOS Simulator: http://localhost:3000/api
-  // For Physical Device: http://YOUR_COMPUTER_IP:3000/api (find IP with 'ipconfig')
-  // For Web: http://localhost:3000/api
+  // Base URL for API - Uses environment variable or defaults to localhost
+  // Override by running: flutter run --dart-define=API_URL=http://YOUR_IP:3000/api
+  static String get baseUrl {
+    const envUrl = String.fromEnvironment('API_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
+    // Default URLs for different platforms
+    // For Web: http://localhost:3000/api
+    // For Android Emulator: http://10.0.2.2:3000/api
+    // For iOS Simulator: http://localhost:3000/api
+    // For Physical Device: Use --dart-define=API_URL=http://YOUR_COMPUTER_IP:3000/api
+    return 'http://localhost:3000/api';
+  }
   
   // API Endpoints
-  static const String login = '$baseUrl/auth/login';
-  static const String register = '$baseUrl/auth/register';
-  static const String getMe = '$baseUrl/auth/me';
-  static const String profile = '$baseUrl/profile';
-  static const String wizardStep = '$baseUrl/profile/wizard';
-  static const String doctors = '$baseUrl/users/doctors';
-  static const String pharmacies = '$baseUrl/users/pharmacies';
-  static const String health = '$baseUrl/health';
+  static String get login => '$baseUrl/auth/login';
+  static String get register => '$baseUrl/auth/register';
+  static String get getMe => '$baseUrl/auth/me';
+  static String get profile => '$baseUrl/profile';
+  static String get wizardStep => '$baseUrl/profile/wizard';
+  static String get doctors => '$baseUrl/users/doctors';
+  static String get pharmacies => '$baseUrl/users/pharmacies';
+  static String get health => '$baseUrl/health';
   
   // Timeout durations
   static const Duration connectTimeout = Duration(seconds: 10);

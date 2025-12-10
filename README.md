@@ -99,15 +99,50 @@ lib/
 ### Installation
 
 1. Clone the repository
-2. Install dependencies:
-```bash
-flutter pub get
-```
 
-3. Run the app:
-```bash
-flutter run
-```
+2. **Backend Setup:**
+   ```bash
+   cd backend
+   npm install
+   ```
+   
+   Create `.env` file:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   NODE_ENV=development
+   PORT=3000
+   ```
+   
+   Start backend:
+   ```bash
+   npm run dev
+   ```
+
+3. **Flutter Setup:**
+   ```bash
+   flutter pub get
+   ```
+
+4. **Run the app:**
+
+   **For Web (default):**
+   ```bash
+   flutter run -d chrome
+   ```
+
+   **For Android Emulator:**
+   ```bash
+   flutter run
+   ```
+
+   **For Physical Device:**
+   Find your computer's IP with `ipconfig` (Windows) or `ifconfig` (Mac/Linux), then:
+   ```bash
+   flutter run --dart-define=API_URL=http://192.168.x.x:3000/api
+   ```
+   
+   ⚠️ **Important:** Make sure backend `server.js` uses `HOST='0.0.0.0'` and both devices are on the same Wi-Fi.
 
 ## 📱 Screens Flow
 
