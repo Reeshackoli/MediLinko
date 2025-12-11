@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/medicine_stock.dart';
 import '../../providers/medicine_provider.dart';
+import '../../services/medicine_service.dart';
 import 'package:intl/intl.dart';
 
 class MedicineListScreen extends ConsumerStatefulWidget {
@@ -226,6 +227,35 @@ class _MedicineListScreenState extends ConsumerState<MedicineListScreen> {
                         fontSize: 12,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Delete button
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    tooltip: 'Delete medicine',
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Delete Medicine'),
+                          content: const Text('Are you sure you want to delete this medicine? This action cannot be undone.'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        try {
+                          await MedicineService.deleteMedicine(medicine.id);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Medicine deleted'), backgroundColor: Colors.green));
+                          ref.invalidate(medicinesProvider);
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete medicine: ${e.toString()}'), backgroundColor: Colors.red));
+                        }
+                      }
+                    },
                   ),
                 ],
               ),
