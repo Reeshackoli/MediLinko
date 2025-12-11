@@ -127,6 +127,7 @@ final doctorStatsProvider = FutureProvider<Map<String, int>>((ref) async {
     return {
       'total': stats['total'] ?? 0,
       'today': stats['today'] ?? 0,
+      'patients': stats['patients'] ?? 0,
       'pending': stats['pending'] ?? 0,
       'approved': stats['approved'] ?? 0,
     };
@@ -135,6 +136,7 @@ final doctorStatsProvider = FutureProvider<Map<String, int>>((ref) async {
   return {
     'total': 0,
     'today': 0,
+    'patients': 0,
     'pending': 0,
     'approved': 0,
   };

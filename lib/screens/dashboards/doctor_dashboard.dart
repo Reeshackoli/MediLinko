@@ -165,11 +165,25 @@ class DoctorDashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _OverviewCard(
-                    title: 'Patients',
-                    value: '6',
-                    icon: Icons.people,
-                    color: AppTheme.secondaryTeal,
+                  child: statsAsync.when(
+                    data: (stats) => _OverviewCard(
+                      title: 'Patients',
+                      value: stats['patients']?.toString() ?? '0',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
+                    loading: () => const _OverviewCard(
+                      title: 'Patients',
+                      value: '...',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
+                    error: (_, __) => const _OverviewCard(
+                      title: 'Patients',
+                      value: '0',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
                   ),
                 ),
               ],

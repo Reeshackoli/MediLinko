@@ -378,6 +378,9 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
 
+    // Count unique patients (distinct userId) for this doctor, excluding cancelled appointments
+    const patientsCount = await Appointment.distinct('userId', { doctorId, status: { $ne: 'cancelled' } }).then(arr => arr.length);
+
     // Stats calculated
 
     res.json({
@@ -385,6 +388,7 @@ exports.getAppointmentStats = async (req, res) => {
       stats: {
         total: totalCount,
         today: todayCount,
+        patients: patientsCount,
         pending: pendingCount,
         approved: approvedCount,
       },
