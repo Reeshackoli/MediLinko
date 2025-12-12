@@ -14,6 +14,8 @@ class _PharmacistPharmacyStepState extends ConsumerState<PharmacistPharmacyStep>
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _pincodeController = TextEditingController();
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
   TimeOfDay? _openingTime;
   TimeOfDay? _closingTime;
 
@@ -25,6 +27,13 @@ class _PharmacistPharmacyStepState extends ConsumerState<PharmacistPharmacyStep>
     _addressController.text = data['fullAddress'] ?? '';
     _cityController.text = data['city'] ?? '';
     _pincodeController.text = data['pincode'] ?? '';
+    // Load manual coordinates if previously entered
+    if (data['pharmacyLatitude'] != null) {
+      _latController.text = data['pharmacyLatitude'].toString();
+    }
+    if (data['pharmacyLongitude'] != null) {
+      _lngController.text = data['pharmacyLongitude'].toString();
+    }
     
     if (data['openingTime'] != null) {
       final parts = (data['openingTime'] as String).split(':');
@@ -53,6 +62,8 @@ class _PharmacistPharmacyStepState extends ConsumerState<PharmacistPharmacyStep>
     _addressController.dispose();
     _cityController.dispose();
     _pincodeController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     super.dispose();
   }
 
@@ -62,6 +73,9 @@ class _PharmacistPharmacyStepState extends ConsumerState<PharmacistPharmacyStep>
       'fullAddress': _addressController.text,
       'city': _cityController.text,
       'pincode': _pincodeController.text,
+      // Save manual coordinates as entered (strings). Provider will convert to numbers.
+      'pharmacyLatitude': _latController.text.isEmpty ? null : _latController.text,
+      'pharmacyLongitude': _lngController.text.isEmpty ? null : _lngController.text,
       'openingTime': _openingTime != null
           ? '${_openingTime!.hour.toString().padLeft(2, '0')}:${_openingTime!.minute.toString().padLeft(2, '0')}'
           : null,
@@ -115,6 +129,35 @@ class _PharmacistPharmacyStepState extends ConsumerState<PharmacistPharmacyStep>
               prefixIcon: Icon(Icons.local_pharmacy),
             ),
             onChanged: (value) => _saveData(),
+          ),
+          const SizedBox(height: 16),
+          // Manual latitude / longitude inputs for pharmacist (manual entry)
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _latController,
+                  decoration: const InputDecoration(
+                    labelText: 'Latitude',
+                    prefixIcon: Icon(Icons.map),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                  onChanged: (value) => _saveData(),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  controller: _lngController,
+                  decoration: const InputDecoration(
+                    labelText: 'Longitude',
+                    prefixIcon: Icon(Icons.map),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                  onChanged: (value) => _saveData(),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           TextFormField(
