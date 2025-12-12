@@ -207,7 +207,7 @@ class UserDashboardScreen extends ConsumerWidget {
                   icon: Icons.local_pharmacy,
                   title: 'Pharmacies',
                   color: AppTheme.secondaryTeal,
-                  onTap: () {},
+                  onTap: () => context.push('/pharmacies-map'),
                 ),
                 _QuickActionCard(
                   icon: Icons.calendar_today,
