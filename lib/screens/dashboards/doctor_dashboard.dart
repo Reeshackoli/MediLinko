@@ -39,6 +39,8 @@ class DoctorDashboardScreen extends ConsumerWidget {
           children: [
             // Profile Card - Clickable
             Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: InkWell(
                 onTap: () => context.push('/doctor-dashboard/profile'),
                 borderRadius: BorderRadius.circular(12),
@@ -165,11 +167,25 @@ class DoctorDashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _OverviewCard(
-                    title: 'Patients',
-                    value: '6',
-                    icon: Icons.people,
-                    color: AppTheme.secondaryTeal,
+                  child: statsAsync.when(
+                    data: (stats) => _OverviewCard(
+                      title: 'Patients',
+                      value: stats['totalPatients']?.toString() ?? '0',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
+                    loading: () => const _OverviewCard(
+                      title: 'Patients',
+                      value: '...',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
+                    error: (_, __) => const _OverviewCard(
+                      title: 'Patients',
+                      value: '0',
+                      icon: Icons.people,
+                      color: AppTheme.secondaryTeal,
+                    ),
                   ),
                 ),
               ],
@@ -190,31 +206,13 @@ class DoctorDashboardScreen extends ConsumerWidget {
             _ActionButton(
               icon: Icons.people_outline,
               title: 'View Patients',
-              onTap: () {},
+              onTap: () => context.push('/doctor/patients'),
             ),
             const SizedBox(height: 12),
             _ActionButton(
               icon: Icons.schedule,
               title: 'Update Availability',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            doctorProfileAsync.when(
-              data: (profile) => _ActionButton(
-                icon: Icons.location_on_outlined,
-                title: 'Clinic: ${profile?['clinicName'] ?? 'Not set'}',
-                onTap: () {},
-              ),
-              loading: () => _ActionButton(
-                icon: Icons.location_on_outlined,
-                title: 'Clinic: Loading...',
-                onTap: () {},
-              ),
-              error: (_, __) => _ActionButton(
-                icon: Icons.location_on_outlined,
-                title: 'Clinic: Not set',
-                onTap: () {},
-              ),
+              onTap: () => context.push('/doctor-dashboard/profile/edit'),
             ),
           ],
         ),
@@ -223,6 +221,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
   }
 }
 
+// Helper widget for stat chips
 class _StatChip extends StatelessWidget {
   final String label;
   final String value;
@@ -269,8 +268,10 @@ class _OverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Icon(icon, size: 32, color: color),
@@ -307,11 +308,13 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Row(
             children: [
               Icon(icon, color: AppTheme.primaryBlue),

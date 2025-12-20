@@ -1,6 +1,8 @@
 ﻿const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const DoctorProfile = require('../models/DoctorProfile');
+const Notification = require('../models/Notification');
+const HealthProfile = require('../models/HealthProfile');
 
 // @desc    Book a new appointment
 // @route   POST /api/appointments/book
@@ -136,12 +138,42 @@ exports.getDoctorAppointments = async (req, res) => {
       .sort({ date: 1, time: 1 })
       .lean();
 
-    // Doctor appointments fetched
+    // Fetch health profiles for all patients in one query
+    const userIds = appointments.map(apt => apt.userId._id);
+    const healthProfiles = await HealthProfile.find({ userId: { $in: userIds } }).lean();
+    
+    // Create a map for quick lookup
+    const profileMap = {};
+    healthProfiles.forEach(profile => {
+      profileMap[profile.userId.toString()] = profile;
+    });
+
+    // Attach health profile to each appointment
+    const enrichedAppointments = appointments.map(apt => {
+      const healthProfile = profileMap[apt.userId._id.toString()];
+      return {
+        ...apt,
+        patientProfile: healthProfile ? {
+          age: healthProfile.age,
+          gender: healthProfile.gender,
+          city: healthProfile.city,
+          bloodGroup: healthProfile.bloodGroup,
+          allergies: healthProfile.allergies || [],
+          medicalConditions: healthProfile.medicalConditions || [],
+          currentMedications: healthProfile.currentMedications || [],
+          emergencyContactName: healthProfile.emergencyContactName,
+          emergencyContactRelationship: healthProfile.emergencyContactRelationship,
+          emergencyContactPhone: healthProfile.emergencyContactPhone,
+        } : null,
+      };
+    });
+
+    console.log(`✅ Fetched ${enrichedAppointments.length} appointments with patient profiles`);
 
     res.json({
       success: true,
-      count: appointments.length,
-      appointments,
+      count: enrichedAppointments.length,
+      appointments: enrichedAppointments,
     });
   } catch (error) {
     console.error('Error fetching doctor appointments:', error);
@@ -197,16 +229,23 @@ exports.getAppointmentById = async (req, res) => {
 };
 
 // @desc    Update appointment status
-// @route   PUT /api/appointments/:id/status
+// @route   PATCH /api/appointments/:id/status
 // @access  Private
 exports.updateAppointmentStatus = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
+
+    console.log('📝 Update appointment status request:');
+    console.log('   Appointment ID:', id);
+    console.log('   User ID:', userId);
+    console.log('   New Status:', status);
+    console.log('   Reason:', reason);
 
     const validStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
     if (!validStatuses.includes(status)) {
+      console.log('❌ Invalid status:', status);
       return res.status(400).json({
         success: false,
         message: 'Invalid status',
@@ -216,16 +255,27 @@ exports.updateAppointmentStatus = async (req, res) => {
     const appointment = await Appointment.findById(id);
 
     if (!appointment) {
+      console.log('❌ Appointment not found:', id);
       return res.status(404).json({
         success: false,
         message: 'Appointment not found',
       });
     }
 
-    const isDoctor = appointment.doctorId.toString() === userId;
-    const isPatient = appointment.userId.toString() === userId;
+    console.log('✅ Appointment found:', {
+      appointmentId: appointment._id,
+      doctorId: appointment.doctorId,
+      userId: appointment.userId,
+      currentStatus: appointment.status,
+    });
+
+    const isDoctor = appointment.doctorId.toString() === userId.toString();
+    const isPatient = appointment.userId.toString() === userId.toString();
+
+    console.log('🔐 Authorization check:', { isDoctor, isPatient });
 
     if (!isDoctor && !isPatient) {
+      console.log('❌ Not authorized');
       return res.status(403).json({
         success: false,
         message: 'Not authorized',
@@ -233,6 +283,7 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     if (isDoctor && !['approved', 'rejected'].includes(status)) {
+      console.log('❌ Doctor can only approve or reject');
       return res.status(400).json({
         success: false,
         message: 'Doctors can only approve or reject',
@@ -240,17 +291,83 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     if (isPatient && status !== 'cancelled') {
+      console.log('❌ Patient can only cancel');
       return res.status(400).json({
         success: false,
         message: 'Patients can only cancel',
       });
     }
 
+    // Update appointment status
     appointment.status = status;
+    if (reason) {
+      appointment.rejectionReason = reason;
+    }
     await appointment.save();
 
+    console.log('✅ Appointment status updated successfully');
+
+    // Populate appointment details
     await appointment.populate('userId', 'fullName email phone');
     await appointment.populate('doctorId', 'fullName email phone specialization clinicName');
+
+    // Create notification for rejected appointments
+    if (status === 'rejected' && isDoctor) {
+      try {
+        const doctorName = appointment.doctorId.fullName || 'Doctor';
+        const notificationMessage = reason 
+          ? `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected. Reason: ${reason}`
+          : `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected.`;
+
+        await Notification.create({
+          userId: appointment.userId._id,
+          title: 'Appointment Rejected',
+          message: notificationMessage,
+          type: 'appointment',
+          relatedId: appointment._id,
+          relatedModel: 'Appointment',
+          data: {
+            appointmentId: appointment._id,
+            doctorName,
+            date: appointment.date,
+            time: appointment.time,
+            status: 'rejected',
+            reason: reason || null,
+          },
+        });
+
+        console.log('✅ Rejection notification created for patient');
+      } catch (notifError) {
+        console.error('⚠️ Failed to create notification:', notifError);
+        // Don't fail the request if notification fails
+      }
+    }
+
+    // Create notification for approved appointments
+    if (status === 'approved' && isDoctor) {
+      try {
+        const doctorName = appointment.doctorId.fullName || 'Doctor';
+        await Notification.create({
+          userId: appointment.userId._id,
+          title: 'Appointment Approved',
+          message: `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been approved.`,
+          type: 'appointment',
+          relatedId: appointment._id,
+          relatedModel: 'Appointment',
+          data: {
+            appointmentId: appointment._id,
+            doctorName,
+            date: appointment.date,
+            time: appointment.time,
+            status: 'approved',
+          },
+        });
+
+        console.log('✅ Approval notification created for patient');
+      } catch (notifError) {
+        console.error('⚠️ Failed to create notification:', notifError);
+      }
+    }
 
     res.json({
       success: true,
@@ -258,7 +375,7 @@ exports.updateAppointmentStatus = async (req, res) => {
       appointment,
     });
   } catch (error) {
-    console.error('Error updating appointment:', error);
+    console.error('❌ Error updating appointment:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -378,6 +495,10 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
 
+    // Get unique patient count
+    const uniquePatients = await Appointment.distinct('userId', { doctorId });
+    const totalPatients = uniquePatients.length;
+
     // Stats calculated
 
     res.json({
@@ -387,6 +508,7 @@ exports.getAppointmentStats = async (req, res) => {
         today: todayCount,
         pending: pendingCount,
         approved: approvedCount,
+        totalPatients: totalPatients,
       },
     });
   } catch (error) {

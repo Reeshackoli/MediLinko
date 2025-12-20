@@ -30,10 +30,10 @@ class OnboardingScreen extends StatelessWidget {
                 const Spacer(),
                 // Logo
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 200,
+                  height: 200,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
@@ -43,10 +43,22 @@ class OnboardingScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.health_and_safety,
-                    size: 60,
-                    color: Colors.white,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppTheme.primaryBlue,
+                          child: const Icon(
+                            Icons.health_and_safety,
+                            size: 100,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),

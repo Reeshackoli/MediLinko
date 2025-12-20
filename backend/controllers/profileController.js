@@ -229,3 +229,54 @@ exports.updateWizardStep = async (req, res) => {
     });
   }
 };
+
+// @desc    Get patient's health profile (for doctors)
+// @route   GET /api/profile/patient/:patientId
+// @access  Private (Doctor)
+exports.getPatientHealthProfile = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requesterId = req.user._id || req.user.id;
+
+    console.log('📋 Fetching patient health profile:', { patientId, requesterId });
+
+    // Verify requester is a doctor
+    const requester = await User.findById(requesterId);
+    if (!requester || requester.role !== 'doctor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Doctor role required.',
+      });
+    }
+
+    // Get patient user details
+    const patient = await User.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found',
+      });
+    }
+
+    // Get patient's health profile
+    const healthProfile = await HealthProfile.findOne({ userId: patientId });
+
+    res.json({
+      success: true,
+      patient: {
+        id: patient._id,
+        fullName: patient.fullName,
+        email: patient.email,
+        phone: patient.phone,
+      },
+      healthProfile: healthProfile || null,
+    });
+  } catch (error) {
+    console.error('❌ Error fetching patient health profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
