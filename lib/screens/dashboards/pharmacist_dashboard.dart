@@ -314,7 +314,6 @@ class PharmacistDashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
->>>>>>> origin/main
             // Quick Actions
             Text(
               'Quick Actions',

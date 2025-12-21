@@ -170,11 +170,7 @@ class DoctorDashboardScreen extends ConsumerWidget {
                   child: statsAsync.when(
                     data: (stats) => _OverviewCard(
                       title: 'Patients',
-<<<<<<< HEAD
-                      value: stats['patients']?.toString() ?? '0',
-=======
                       value: stats['totalPatients']?.toString() ?? '0',
->>>>>>> origin/main
                       icon: Icons.people,
                       color: AppTheme.secondaryTeal,
                     ),
