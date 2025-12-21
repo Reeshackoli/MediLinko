@@ -172,7 +172,7 @@ class _AppointmentListScreenState extends ConsumerState<AppointmentListScreen> {
                         Text(
                           _selectedFilter == 'all'
                               ? 'No appointments yet'
-                              : 'No ${_selectedFilter} appointments',
+                              : 'No $_selectedFilter appointments',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.grey[600],

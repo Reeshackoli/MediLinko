@@ -30,35 +30,31 @@ class OnboardingScreen extends StatelessWidget {
                 const Spacer(),
                 // Logo
                 Container(
-                  width: 200,
-                  height: 200,
+                  width: 180,
+                  height: 180,
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryBlue.withOpacity(0.3),
-                        blurRadius: 20,
+                        color: AppTheme.primaryBlue.withOpacity(0.2),
+                        blurRadius: 30,
+                        spreadRadius: 5,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppTheme.primaryBlue,
-                          child: const Icon(
-                            Icons.health_and_safety,
-                            size: 100,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.health_and_safety,
+                        size: 100,
+                        color: AppTheme.primaryBlue,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 32),

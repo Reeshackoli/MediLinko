@@ -6,12 +6,17 @@ class ApiConfig {
     if (envUrl.isNotEmpty) {
       return envUrl;
     }
+    
+    // IMPORTANT: Change this IP to your computer's IP address when running on physical device
+    // To find your IP: Run 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
+    // Current IP: 192.168.29.106 (Sushil's PC)
+    // For others: Default is 'localhost' for local testing
+    const myDeviceIp = String.fromEnvironment('MY_IP', defaultValue: '192.168.29.106');
+    
     // Default URLs for different platforms
-    // For Web: http://localhost:3000/api
-    // For Android Emulator: http://10.0.2.2:3000/api
-    // For iOS Simulator: http://localhost:3000/api
-    // For Physical Device: Use --dart-define=API_URL=http://YOUR_COMPUTER_IP:3000/api
-    return 'http://localhost:3000/api';
+    // For Web/Emulator: Use localhost
+    // For Physical Device: Use computer's actual IP
+    return 'http://$myDeviceIp:3000/api';
   }
   
   // API Endpoints

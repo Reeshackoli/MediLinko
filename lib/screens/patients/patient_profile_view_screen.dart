@@ -63,6 +63,13 @@ class _PatientProfileViewScreenState extends ConsumerState<PatientProfileViewScr
     return Scaffold(
       appBar: AppBar(
         title: Text('Patient: ${widget.patientName}'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: AppTheme.primaryBlue,
+        foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

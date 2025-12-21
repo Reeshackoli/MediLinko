@@ -150,10 +150,12 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
           final lngVal = state['pharmacyLongitude'];
           double? lat;
           double? lng;
-          if (latVal is double) lat = latVal;
-          else if (latVal is String) lat = double.tryParse(latVal);
-          if (lngVal is double) lng = lngVal;
-          else if (lngVal is String) lng = double.tryParse(lngVal);
+          if (latVal is double) {
+            lat = latVal;
+          } else if (latVal is String) lat = double.tryParse(latVal);
+          if (lngVal is double) {
+            lng = lngVal;
+          } else if (lngVal is String) lng = double.tryParse(lngVal);
 
           if (lat != null && lng != null) {
             completeData['pharmacyLatitude'] = lat;

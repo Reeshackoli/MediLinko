@@ -66,7 +66,7 @@ class _UserEmergencyStepState extends ConsumerState<UserEmergencyStep> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedRelationship,
+            initialValue: _selectedRelationship,
             decoration: const InputDecoration(
               labelText: 'Relationship',
               prefixIcon: Icon(Icons.people),

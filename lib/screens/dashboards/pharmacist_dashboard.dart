@@ -143,8 +143,8 @@ class PharmacistDashboardScreen extends ConsumerWidget {
                           radius: 30,
                           backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
                           child: Text(
-                            user?.fullName?.isNotEmpty == true 
-                                ? user!.fullName![0].toUpperCase() 
+                            user?.fullName.isNotEmpty == true 
+                                ? user!.fullName[0].toUpperCase() 
                                 : 'P',
                             style: const TextStyle(
                               fontSize: 24,

@@ -55,6 +55,18 @@ const healthProfileSchema = new mongoose.Schema({
   emergencyContactPhone: {
     type: String,
     match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number']
+  },
+  emergencyContactName2: {
+    type: String,
+    trim: true
+  },
+  emergencyContactRelationship2: {
+    type: String,
+    trim: true
+  },
+  emergencyContactPhone2: {
+    type: String,
+    match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number']
   }
 }, {
   timestamps: true

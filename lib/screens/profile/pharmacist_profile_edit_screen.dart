@@ -216,7 +216,7 @@ class _PharmacistProfileEditScreenState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _verificationStatus,
+                initialValue: _verificationStatus,
                 decoration: const InputDecoration(
                   labelText: 'Verification Status',
                   prefixIcon: Icon(Icons.verified),

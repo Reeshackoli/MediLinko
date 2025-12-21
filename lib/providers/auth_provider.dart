@@ -1,9 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/session_manager.dart';
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   AuthNotifier() : super(const AsyncValue.data(null));
+
+  // Restore user from saved session (from Map)
+  void restoreUser(Map<String, dynamic> userData) {
+    try {
+      final user = UserModel.fromJson(userData);
+      state = AsyncValue.data(user);
+    } catch (e) {
+      state = const AsyncValue.data(null);
+    }
+  }
+
+  // Restore user from UserModel directly
+  void restoreUserModel(UserModel user) {
+    state = AsyncValue.data(user);
+  }
 
   // Login with real API
   Future<String?> login(String email, String password) async {
@@ -18,6 +34,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
       if (response.success && response.data != null) {
         final userData = response.data!['user'];
         final user = UserModel.fromJson(userData);
+        
+        // Save session for persistence
+        await SessionManager.saveUserSession(userData);
+        
         state = AsyncValue.data(user);
         return null; // Success
       } else {
@@ -60,6 +80,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
   void logout() async {
     await AuthService.logout();
+    await SessionManager.clearSession();
     state = const AsyncValue.data(null);
   }
 

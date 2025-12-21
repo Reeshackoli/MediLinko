@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
 
+// --- Splash Screen ---
+import '../../screens/splash_screen.dart';
+
 // --- Auth & Onboarding ---
 import '../../models/user_role.dart';
 import '../../screens/auth/onboarding_screen.dart';
@@ -37,19 +40,41 @@ import '../../screens/appointments/doctor_appointments_screen.dart';
 import '../../screens/patients/patient_management_screen.dart';
 import '../../screens/patients/patient_profile_view_screen.dart';
 
+// --- Emergency ---
+import '../../screens/emergency/emergency_screen.dart';
+
 // --- Models ---
 import '../../models/appointment_model.dart';
 import '../../models/doctor_location_model.dart';
 
+// --- Main for navigator key ---
+import '../../main.dart';
+
+// --- Providers ---
+
 
 final GoRouter router = GoRouter(
-  initialLocation: '/',
+  navigatorKey: navigatorKey,
+  initialLocation: '/splash',
   routes: [
+    // ------------------- Splash Screen -------------------
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
+    
     // ------------------- Auth & Onboarding -------------------
     GoRoute(
       path: '/',
       builder: (context, state) => const OnboardingScreen(),
     ),
+    
+    // ------------------- Emergency -------------------
+    GoRoute(
+      path: '/emergency',
+      builder: (context, state) => const EmergencyScreen(),
+    ),
+    
     GoRoute(
       path: '/role-selection',
       builder: (context, state) => const RoleSelectionScreen(),

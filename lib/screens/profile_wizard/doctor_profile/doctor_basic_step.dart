@@ -56,7 +56,7 @@ class _DoctorBasicStepState extends ConsumerState<DoctorBasicStep> {
           ),
           const SizedBox(height: 32),
           DropdownButtonFormField<String>(
-            value: _selectedGender,
+            initialValue: _selectedGender,
             decoration: const InputDecoration(
               labelText: 'Gender',
               prefixIcon: Icon(Icons.person_outline),
@@ -84,7 +84,7 @@ class _DoctorBasicStepState extends ConsumerState<DoctorBasicStep> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedSpecialization,
+            initialValue: _selectedSpecialization,
             decoration: const InputDecoration(
               labelText: 'Specialization',
               prefixIcon: Icon(Icons.medical_services),

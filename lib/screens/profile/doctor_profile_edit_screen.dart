@@ -163,7 +163,7 @@ class _DoctorProfileEditScreenState extends ConsumerState<DoctorProfileEditScree
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: const InputDecoration(
                   labelText: 'Gender',
                   prefixIcon: Icon(Icons.person),

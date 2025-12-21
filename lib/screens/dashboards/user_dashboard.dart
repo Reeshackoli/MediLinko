@@ -4,12 +4,45 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/health_profile_provider.dart';
+import '../../services/fall_detection_service.dart';
+import '../../widgets/fall_detection_alert.dart';
 
-class UserDashboardScreen extends ConsumerWidget {
+class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserDashboardScreen> createState() => _UserDashboardScreenState();
+}
+
+class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeFallDetection();
+  }
+
+  void _initializeFallDetection() {
+    // Start fall detection monitoring
+    FallDetectionService.instance.startMonitoring(
+      onFallDetected: () {
+        debugPrint('🚨 Fall detected callback triggered');
+        if (mounted) {
+          // Show alert immediately
+          FallDetectionAlert.show(context);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    // Stop monitoring when leaving dashboard
+    FallDetectionService.instance.stopMonitoring();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final healthProfileAsync = ref.watch(healthProfileProvider);
 
