@@ -251,7 +251,70 @@ class PharmacistDashboardScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 24),
-            
+            // Today's Stats
+            Text(
+              "Today's Stats",
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: 'Orders',
+                    value: '12',
+                    icon: Icons.shopping_bag,
+                    color: AppTheme.primaryBlue,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Revenue',
+                    value: '₹8,500',
+                    icon: Icons.currency_rupee,
+                    color: AppTheme.successColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Services
+            Text(
+              'Services',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            pharmacistProfileAsync.when(
+              data: (profile) {
+                final services = profile?['servicesOffered'] as List?;
+                if (services != null && services.isNotEmpty) {
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: services.map((service) {
+                      return Chip(
+                        label: Text(service.toString()),
+                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                        labelStyle: const TextStyle(color: AppTheme.primaryBlue),
+                      );
+                    }).toList(),
+                  );
+                }
+                return const Text(
+                  'No services listed',
+                  style: TextStyle(color: Colors.grey),
+                );
+              },
+              loading: () => const CircularProgressIndicator(),
+              error: (_, __) => const Text(
+                'No services listed',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 24),
+>>>>>>> origin/main
             // Quick Actions
             Text(
               'Quick Actions',

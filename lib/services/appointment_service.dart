@@ -198,15 +198,29 @@ class AppointmentService {
   static Future<Map<String, dynamic>> updateAppointmentStatus({
     required String appointmentId,
     required String status,
+    String? reason,
   }) async {
     try {
       final token = await _tokenService.getToken();
       if (token == null) {
+        print('❌ No authentication token found');
         return {
           'success': false,
           'message': 'No authentication token found',
         };
       }
+
+      final requestBody = {
+        'status': status,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      };
+
+      print('📤 Updating appointment status:');
+      print('   URL: ${ApiConfig.baseUrl}/appointments/$appointmentId/status');
+      print('   Appointment ID: $appointmentId');
+      print('   Status: $status');
+      print('   Reason: ${reason ?? 'N/A'}');
+      print('   Token: ${token.substring(0, 20)}...');
 
       final response = await http
           .patch(
@@ -215,13 +229,24 @@ class AppointmentService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
             },
-            body: jsonEncode({'status': status}),
+            body: jsonEncode(requestBody),
           )
           .timeout(ApiConfig.connectTimeout);
 
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
+
       final Map<String, dynamic> responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Appointment status updated successfully');
+      } else {
+        print('⚠️ Server returned non-success status: ${response.statusCode}');
+      }
+      
       return responseData;
     } catch (e) {
+      print('❌ Error updating appointment status: $e');
       return {
         'success': false,
         'message': 'Connection error: ${e.toString()}',

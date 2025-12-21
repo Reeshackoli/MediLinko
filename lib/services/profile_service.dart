@@ -114,4 +114,41 @@ class ProfileService {
       };
     }
   }
+
+  // Get health profile for a specific user (used by doctors to view patient profiles)
+  static Future<Map<String, dynamic>> getHealthProfile(String userId) async {
+    try {
+      final token = await _tokenService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token found',
+        };
+      }
+
+      print('📤 Fetching patient health profile: $userId');
+
+      final response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}/profile/patient/$userId'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(ApiConfig.connectTimeout);
+
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return responseData;
+    } catch (e) {
+      print('❌ Error fetching health profile: $e');
+      return {
+        'success': false,
+        'message': 'Connection error: ${e.toString()}',
+      };
+    }
+  }
 }

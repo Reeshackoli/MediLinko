@@ -35,6 +35,8 @@ import '../../screens/maps/pharmacist_map_screen.dart';
 import '../../screens/appointments/book_appointment_screen.dart';
 import '../../screens/appointments/appointment_list_screen.dart';
 import '../../screens/appointments/doctor_appointments_screen.dart';
+import '../../screens/patients/patient_management_screen.dart';
+import '../../screens/patients/patient_profile_view_screen.dart';
 
 // --- Models ---
 import '../../models/appointment_model.dart';
@@ -161,6 +163,21 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/doctor/appointments',
       builder: (context, state) => const DoctorAppointmentsScreen(),
+    ),
+    GoRoute(
+      path: '/doctor/patients',
+      builder: (context, state) => const PatientManagementScreen(),
+    ),
+    GoRoute(
+      path: '/doctor/patients/:patientId',
+      builder: (context, state) {
+        final patientId = state.pathParameters['patientId']!;
+        final patientName = state.uri.queryParameters['name'] ?? 'Patient';
+        return PatientProfileViewScreen(
+          patientId: patientId,
+          patientName: patientName,
+        );
+      },
     ),
   ],
 );

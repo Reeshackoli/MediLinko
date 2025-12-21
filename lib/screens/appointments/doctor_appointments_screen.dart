@@ -33,54 +33,185 @@ class _DoctorAppointmentsScreenState
     String appointmentId,
     String status,
   ) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('${status == 'approved' ? 'Approve' : 'Reject'} Appointment'),
-        content: Text(
-          'Are you sure you want to ${status == 'approved' ? 'approve' : 'reject'} this appointment?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor:
-                  status == 'approved' ? Colors.green : Colors.red,
-            ),
-            child: Text(status == 'approved' ? 'Approve' : 'Reject'),
-          ),
-        ],
-      ),
-    );
+    String? rejectionReason;
 
-    if (confirm == true) {
-      try {
-        await ref
-            .read(doctorAppointmentsProvider.notifier)
-            .updateStatus(appointmentId, status);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Appointment ${status == 'approved' ? 'approved' : 'rejected'} successfully',
+    // If rejecting, ask for reason
+    if (status == 'rejected') {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            title: const Text('Reject Appointment'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Please provide a reason for rejection:',
+                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g., Fully booked, Emergency case',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  autofocus: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
-              backgroundColor: Colors.green,
-            ),
+              TextButton(
+                onPressed: () {
+                  if (controller.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please provide a reason'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context, controller.text.trim());
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: const Text('Reject'),
+              ),
+            ],
           );
-        }
-      } catch (e) {
-        if (mounted) {
+        },
+      );
+
+      if (result == null) return; // User cancelled
+      rejectionReason = result;
+    } else {
+      // For approve, show confirmation
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Approve Appointment'),
+          content: const Text(
+            'Are you sure you want to approve this appointment?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+              ),
+              child: const Text('Approve'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return; // User cancelled
+    }
+
+    // Show loading indicator
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF4C9AFF)),
+                  SizedBox(height: 16),
+                  Text('Updating appointment...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    try {
+      final success = await ref
+          .read(doctorAppointmentsProvider.notifier)
+          .updateStatus(appointmentId, status, reason: rejectionReason);
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to update: $e'),
+              content: Row(
+                children: [
+                  Icon(
+                    status == 'approved' ? Icons.check_circle : Icons.cancel,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      status == 'approved' 
+                        ? 'Appointment approved successfully. Patient will be notified.'
+                        : 'Appointment rejected. Patient has been notified.',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: status == 'approved' ? Colors.green : Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Failed to update appointment. Please check your connection.'),
+                  ),
+                ],
+              ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 4),
             ),
           );
         }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }
@@ -523,8 +654,100 @@ class _DoctorAppointmentCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       appointment.symptoms,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[800],
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            ],
+            // Patient Profile Section
+            if (appointment.patientProfile != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[100]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Colors.green[700],
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Patient Details',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: [
+                        if (appointment.patientProfile!.age != null)
+                          _buildInfoChip(
+                            Icons.cake,
+                            '${appointment.patientProfile!.age} yrs',
+                          ),
+                        if (appointment.patientProfile!.gender != null)
+                          _buildInfoChip(
+                            Icons.person_outline,
+                            appointment.patientProfile!.gender!,
+                          ),
+                        if (appointment.patientProfile!.bloodGroup != null)
+                          _buildInfoChip(
+                            Icons.water_drop,
+                            appointment.patientProfile!.bloodGroup!,
+                          ),
+                      ],
+                    ),
+                    if (appointment.patientProfile!.allergies.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Allergies: ${appointment.patientProfile!.allergies.join(', ')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    if (appointment.patientProfile!.medicalConditions.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Conditions: ${appointment.patientProfile!.medicalConditions.join(', ')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                    if (appointment.patientProfile!.currentMedications.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Medications: ${appointment.patientProfile!.currentMedications.join(', ')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -541,6 +764,7 @@ class _DoctorAppointmentCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -556,6 +780,8 @@ class _DoctorAppointmentCard extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -567,6 +793,32 @@ class _DoctorAppointmentCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.green[700]),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[800],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
