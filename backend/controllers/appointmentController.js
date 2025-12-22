@@ -495,13 +495,11 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
 
-<<<<<<< HEAD
-    // Get unique patient counts
-    const uniquePatients = await Appointment.distinct('userId', { doctorId });
-    const totalPatients = uniquePatients.length;
-    // Count unique patients excluding cancelled appointments
-    const patientsCount = await Appointment.distinct('userId', { doctorId, status: { $ne: 'cancelled' } }).then(arr => arr.length);
->>>>>>> 7652ac0b95d9d7c4f5d7b33b7d46e8b9d078a7f7
+  // Get unique patient counts
+  const uniquePatients = await Appointment.distinct('userId', { doctorId });
+  const totalPatients = uniquePatients.length;
+  // Count unique patients excluding cancelled appointments
+  const patientsCount = await Appointment.distinct('userId', { doctorId, status: { $ne: 'cancelled' } }).then(arr => arr.length);
 
     // Stats calculated
 
