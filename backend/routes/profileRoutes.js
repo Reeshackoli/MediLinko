@@ -2,7 +2,8 @@ const express = require('express');
 const { 
   updateProfile, 
   getProfile, 
-  updateWizardStep 
+  updateWizardStep,
+  getPatientHealthProfile
 } = require('../controllers/profileController');
 const { protect } = require('../middleware/auth');
 
@@ -13,5 +14,6 @@ router.route('/')
   .put(protect, updateProfile);
 
 router.patch('/wizard', protect, updateWizardStep);
+router.get('/patient/:patientId', protect, getPatientHealthProfile);
 
 module.exports = router;

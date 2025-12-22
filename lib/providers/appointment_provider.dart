@@ -88,18 +88,30 @@ class DoctorAppointmentsNotifier extends StateNotifier<AsyncValue<List<Appointme
     }
   }
 
-  Future<bool> updateStatus(String appointmentId, String status) async {
+  Future<bool> updateStatus(String appointmentId, String status, {String? reason}) async {
+    print('📝 Provider: Updating appointment status');
+    print('   Appointment ID: $appointmentId');
+    print('   Status: $status');
+    print('   Reason: ${reason ?? 'N/A'}');
+    
     final response = await AppointmentService.updateAppointmentStatus(
       appointmentId: appointmentId,
       status: status,
+      reason: reason,
     );
 
+    print('📥 Provider: Response received');
+    print('   Success: ${response['success']}');
+    print('   Message: ${response['message']}');
+
     if (response['success'] == true) {
+      print('✅ Provider: Status update successful, reloading appointments');
       // Reload appointments
       await loadAppointments();
       return true;
     }
     
+    print('❌ Provider: Status update failed');
     return false;
   }
 }
@@ -130,6 +142,7 @@ final doctorStatsProvider = FutureProvider<Map<String, int>>((ref) async {
       'patients': stats['patients'] ?? 0,
       'pending': stats['pending'] ?? 0,
       'approved': stats['approved'] ?? 0,
+      'totalPatients': stats['totalPatients'] ?? 0,
     };
   }
   
@@ -139,5 +152,6 @@ final doctorStatsProvider = FutureProvider<Map<String, int>>((ref) async {
     'patients': 0,
     'pending': 0,
     'approved': 0,
+    'totalPatients': 0,
   };
 });

@@ -168,7 +168,7 @@ class _AddMedicineScreenState extends ConsumerState<AddMedicineScreen> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: InputDecoration(
                 labelText: 'Category *',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

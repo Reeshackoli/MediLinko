@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+// geolocation removed: pharmacist should enter coords manually in pharmacy step
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/profile_wizard_provider.dart';
@@ -19,6 +20,7 @@ class _PharmacistVerificationStepState
   final _radiusController = TextEditingController();
   String? _documentPath;
   final Set<String> _selectedServices = {};
+  // coordinates handled in the pharmacy step; do not capture current location here
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _PharmacistVerificationStepState
     _radiusController.text = data['deliveryRadius'] ?? '';
     _documentPath = data['documentUrl'];
     _selectedServices.addAll((data['servicesOffered'] as List<String>?) ?? []);
+    // pharmacy latitude/longitude come from previous wizard step; no auto-capture
   }
 
   @override
@@ -43,6 +46,7 @@ class _PharmacistVerificationStepState
       'documentUrl': _documentPath,
       'servicesOffered': _selectedServices.toList(),
       'deliveryRadius': _radiusController.text,
+      // coordinates are saved by pharmacy details step
     });
   }
 
@@ -98,6 +102,8 @@ class _PharmacistVerificationStepState
             'Upload License Document',
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 12),
+          // Location is provided in the Pharmacy Details step; no auto-capture here.
           const SizedBox(height: 12),
           InkWell(
             onTap: _pickDocument,

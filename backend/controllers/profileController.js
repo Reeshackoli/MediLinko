@@ -69,6 +69,19 @@ exports.updateProfile = async (req, res) => {
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      // If pharmacist provided pharmacy coordinates, update user model location as well
+      if (profileData.pharmacyLatitude && profileData.pharmacyLongitude) {
+        const lat = parseFloat(profileData.pharmacyLatitude);
+        const lng = parseFloat(profileData.pharmacyLongitude);
+
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          await User.findByIdAndUpdate(userId, {
+            pharmacyLatitude: lat,
+            pharmacyLongitude: lng,
+            'location.coordinates': [lng, lat]
+          });
+        }
+      }
     }
 
     // Mark user profile as complete
@@ -188,6 +201,20 @@ exports.updateWizardStep = async (req, res) => {
         { $set: stepData },
         { new: true, upsert: true, runValidators: false }
       );
+      // If pharmacist provided pharmacy coordinates in wizard step, update User model location
+      if (stepData.pharmacyLatitude && stepData.pharmacyLongitude) {
+        const lat = parseFloat(stepData.pharmacyLatitude);
+        const lng = parseFloat(stepData.pharmacyLongitude);
+
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          await User.findByIdAndUpdate(userId, {
+            pharmacyLatitude: lat,
+            pharmacyLongitude: lng,
+            'location.coordinates': [lng, lat]
+          });
+          console.log('✅ Updated pharmacist location in wizard step:', { lat, lng });
+        }
+      }
     }
 
     res.status(200).json({
@@ -199,6 +226,57 @@ exports.updateWizardStep = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+// @desc    Get patient's health profile (for doctors)
+// @route   GET /api/profile/patient/:patientId
+// @access  Private (Doctor)
+exports.getPatientHealthProfile = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requesterId = req.user._id || req.user.id;
+
+    console.log('📋 Fetching patient health profile:', { patientId, requesterId });
+
+    // Verify requester is a doctor
+    const requester = await User.findById(requesterId);
+    if (!requester || requester.role !== 'doctor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Doctor role required.',
+      });
+    }
+
+    // Get patient user details
+    const patient = await User.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found',
+      });
+    }
+
+    // Get patient's health profile
+    const healthProfile = await HealthProfile.findOne({ userId: patientId });
+
+    res.json({
+      success: true,
+      patient: {
+        id: patient._id,
+        fullName: patient.fullName,
+        email: patient.email,
+        phone: patient.phone,
+      },
+      healthProfile: healthProfile || null,
+    });
+  } catch (error) {
+    console.error('❌ Error fetching patient health profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
     });
   }
 };

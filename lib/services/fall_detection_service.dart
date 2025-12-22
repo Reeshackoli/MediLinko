@@ -1,0 +1,75 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter/material.dart';
+
+class FallDetectionService {
+  static FallDetectionService? _instance;
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  bool _isMonitoring = false;
+  DateTime? _lastFallDetected;
+  final Duration _debounceDuration = const Duration(seconds: 30);
+  
+  // Fall detection threshold (in G-force)
+  static const double fallThreshold = 2.5;
+  
+  // Global key to access navigator from anywhere
+  static GlobalKey<NavigatorState>? navigatorKey;
+  
+  // Callback when fall is detected
+  VoidCallback? onFallDetected;
+
+  FallDetectionService._();
+
+  static FallDetectionService get instance {
+    _instance ??= FallDetectionService._();
+    return _instance!;
+  }
+
+  void startMonitoring({VoidCallback? onFallDetected}) {
+    if (_isMonitoring) return;
+    
+    this.onFallDetected = onFallDetected;
+    _isMonitoring = true;
+
+    debugPrint('🔔 Fall detection monitoring started');
+
+    _accelerometerSubscription = accelerometerEventStream().listen((event) {
+      _checkForFall(event);
+    });
+  }
+
+  void _checkForFall(AccelerometerEvent event) {
+    // Calculate total acceleration (magnitude)
+    final double totalAcceleration = sqrt(
+      event.x * event.x + event.y * event.y + event.z * event.z,
+    );
+
+    // Check if acceleration exceeds threshold
+    if (totalAcceleration > fallThreshold * 9.81) { // Convert G to m/s²
+      // Debounce - don't trigger if recently detected
+      if (_lastFallDetected != null &&
+          DateTime.now().difference(_lastFallDetected!) < _debounceDuration) {
+        return;
+      }
+
+      _lastFallDetected = DateTime.now();
+      debugPrint('⚠️ FALL DETECTED! Acceleration: ${totalAcceleration.toStringAsFixed(2)} m/s²');
+      
+      // Trigger callback immediately
+      onFallDetected?.call();
+    }
+  }
+
+  void stopMonitoring() {
+    _accelerometerSubscription?.cancel();
+    _isMonitoring = false;
+    debugPrint('🔕 Fall detection monitoring stopped');
+  }
+
+  bool get isMonitoring => _isMonitoring;
+
+  void dispose() {
+    stopMonitoring();
+  }
+}

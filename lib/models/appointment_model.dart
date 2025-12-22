@@ -14,6 +14,9 @@
   
   // Populated user details (for doctors viewing appointments)
   final PatientInfo? patient;
+  
+  // Patient health profile (embedded in appointment response)
+  final PatientProfile? patientProfile;
 
   AppointmentModel({
     required this.id,
@@ -27,6 +30,7 @@
     required this.updatedAt,
     this.doctor,
     this.patient,
+    this.patientProfile,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,7 @@
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
       doctor: json['doctorId'] is Map ? DoctorInfo.fromJson(json['doctorId']) : null,
       patient: json['userId'] is Map ? PatientInfo.fromJson(json['userId']) : null,
+      patientProfile: json['patientProfile'] != null ? PatientProfile.fromJson(json['patientProfile']) : null,
     );
   }
 
@@ -71,6 +76,7 @@
     DateTime? updatedAt,
     DoctorInfo? doctor,
     PatientInfo? patient,
+    PatientProfile? patientProfile,
   }) {
     return AppointmentModel(
       id: id ?? this.id,
@@ -84,6 +90,7 @@
       updatedAt: updatedAt ?? this.updatedAt,
       doctor: doctor ?? this.doctor,
       patient: patient ?? this.patient,
+      patientProfile: patientProfile ?? this.patientProfile,
     );
   }
 
@@ -179,3 +186,51 @@ class PatientInfo {
     );
   }
 }
+
+class PatientProfile {
+  final int? age;
+  final String? gender;
+  final String? city;
+  final String? bloodGroup;
+  final List<String> allergies;
+  final List<String> medicalConditions;
+  final List<String> currentMedications;
+  final String? emergencyContactName;
+  final String? emergencyContactRelationship;
+  final String? emergencyContactPhone;
+
+  PatientProfile({
+    this.age,
+    this.gender,
+    this.city,
+    this.bloodGroup,
+    this.allergies = const [],
+    this.medicalConditions = const [],
+    this.currentMedications = const [],
+    this.emergencyContactName,
+    this.emergencyContactRelationship,
+    this.emergencyContactPhone,
+  });
+
+  factory PatientProfile.fromJson(Map<String, dynamic> json) {
+    return PatientProfile(
+      age: json['age'],
+      gender: json['gender'],
+      city: json['city'],
+      bloodGroup: json['bloodGroup'],
+      allergies: json['allergies'] != null 
+          ? List<String>.from(json['allergies']) 
+          : [],
+      medicalConditions: json['medicalConditions'] != null 
+          ? List<String>.from(json['medicalConditions']) 
+          : [],
+      currentMedications: json['currentMedications'] != null 
+          ? List<String>.from(json['currentMedications']) 
+          : [],
+      emergencyContactName: json['emergencyContactName'],
+      emergencyContactRelationship: json['emergencyContactRelationship'],
+      emergencyContactPhone: json['emergencyContactPhone'],
+    );
+  }
+}
+

@@ -239,6 +239,9 @@ class _NavigationButtons extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: onSkip,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 child: const Text('Skip'),
               ),
             ),
@@ -247,7 +250,15 @@ class _NavigationButtons extends StatelessWidget {
             flex: 2,
             child: ElevatedButton(
               onPressed: onNext,
-              child: Text(isLastStep ? 'Complete' : 'Continue'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 2,
+                shadowColor: AppTheme.primaryBlue.withOpacity(0.4),
+              ),
+              child: Text(
+                isLastStep ? 'Complete' : 'Continue',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

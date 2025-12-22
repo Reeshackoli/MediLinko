@@ -195,7 +195,7 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
               decoration: const InputDecoration(labelText: 'Gender'),
               items: ['Male', 'Female', 'Other']
                   .map((g) => DropdownMenuItem(value: g, child: Text(g)))
@@ -214,7 +214,7 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
             // Health Information
             _buildSectionTitle('Health Information'),
             DropdownButtonFormField<String>(
-              value: _selectedBloodGroup,
+              initialValue: _selectedBloodGroup,
               decoration: const InputDecoration(labelText: 'Blood Group'),
               items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
                   .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))

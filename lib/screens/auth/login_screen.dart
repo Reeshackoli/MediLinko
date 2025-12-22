@@ -159,23 +159,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('Forgot Password?'),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 // Login Button
                 SizedBox(
                   width: double.infinity,
+                  height: 56,
                   child: ElevatedButton(
                     onPressed: authState.isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 2,
+                      shadowColor: AppTheme.primaryBlue.withOpacity(0.4),
+                    ),
                     child: authState.isLoading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
+                            height: 24,
+                            width: 24,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.5,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text('Login'),
+                        : const Text(
+                            'Login',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),

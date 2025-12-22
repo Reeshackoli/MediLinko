@@ -103,10 +103,10 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
       
       // Transform pharmacy data for pharmacist role
       if (baseUser.role == UserRole.pharmacist) {
-        // Rename pharmacyName to storeName
+        // Keep `pharmacyName` (backend expects this). Also set `storeName` to be safe for other consumers.
         if (state.containsKey('pharmacyName')) {
+          completeData['pharmacyName'] = state['pharmacyName'];
           completeData['storeName'] = state['pharmacyName'];
-          completeData.remove('pharmacyName');
         }
         
         // Transform store address
@@ -142,6 +142,25 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
         // Convert deliveryRadius to number
         if (state.containsKey('deliveryRadius')) {
           completeData['deliveryRadius'] = int.tryParse(state['deliveryRadius'].toString()) ?? 0;
+        }
+        // Include pharmacy coordinates if provided (numbers)
+        if (state.containsKey('pharmacyLatitude') && state.containsKey('pharmacyLongitude')) {
+          // Ensure numeric values
+          final latVal = state['pharmacyLatitude'];
+          final lngVal = state['pharmacyLongitude'];
+          double? lat;
+          double? lng;
+          if (latVal is double) {
+            lat = latVal;
+          } else if (latVal is String) lat = double.tryParse(latVal);
+          if (lngVal is double) {
+            lng = lngVal;
+          } else if (lngVal is String) lng = double.tryParse(lngVal);
+
+          if (lat != null && lng != null) {
+            completeData['pharmacyLatitude'] = lat;
+            completeData['pharmacyLongitude'] = lng;
+          }
         }
       }
 

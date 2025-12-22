@@ -96,7 +96,7 @@ class _UserPersonalStepState extends ConsumerState<UserPersonalStep> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedGender,
+            initialValue: _selectedGender,
             decoration: const InputDecoration(
               labelText: 'Gender',
               prefixIcon: Icon(Icons.person_outline),

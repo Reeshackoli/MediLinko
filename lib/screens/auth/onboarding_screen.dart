@@ -30,23 +30,31 @@ class OnboardingScreen extends StatelessWidget {
                 const Spacer(),
                 // Logo
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 180,
+                  height: 180,
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryBlue.withOpacity(0.3),
-                        blurRadius: 20,
+                        color: AppTheme.primaryBlue.withOpacity(0.2),
+                        blurRadius: 30,
+                        spreadRadius: 5,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.health_and_safety,
-                    size: 60,
-                    color: Colors.white,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.health_and_safety,
+                        size: 100,
+                        color: AppTheme.primaryBlue,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 32),

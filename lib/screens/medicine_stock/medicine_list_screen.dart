@@ -280,7 +280,7 @@ class _MedicineListScreenState extends ConsumerState<MedicineListScreen> {
                   const SizedBox(width: 8),
                   _buildInfoChip(
                     icon: Icons.currency_rupee,
-                    label: '${medicine.price.toStringAsFixed(2)}',
+                    label: medicine.price.toStringAsFixed(2),
                     color: Colors.teal,
                   ),
                 ],
