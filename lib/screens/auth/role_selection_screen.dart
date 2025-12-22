@@ -11,6 +11,13 @@ class RoleSelectionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Your Role'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Server Settings',
+            onPressed: () => context.push('/settings/server'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(

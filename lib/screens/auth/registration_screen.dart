@@ -114,6 +114,13 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Account'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Server Settings',
+            onPressed: () => context.push('/settings/server'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
