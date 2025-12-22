@@ -1,22 +1,95 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 class ApiConfig {
-  // Base URL for API - Uses environment variable or defaults to localhost
-  // Override by running: flutter run --dart-define=API_URL=http://YOUR_IP:3000/api
-  static String get baseUrl {
-    const envUrl = String.fromEnvironment('API_URL');
-    if (envUrl.isNotEmpty) {
-      return envUrl;
+  // Base URL for API - Now dynamically configurable!
+  // Users can set this from Settings screen without changing code
+  // 
+  // Priority:
+  // 1. User-configured URL (from Settings)
+  // 2. Environment variable: flutter run --dart-define=API_URL=http://YOUR_IP:3000/api
+  // 3. Default: Current computer IP (changes with WiFi)
+  //
+  // EASY SETUP OPTIONS:
+  // - Option A: Set in app Settings screen (recommended for physical devices)
+  // - Option B: Use ngrok for internet access (works anywhere)
+  // - Option C: Current computer IP: 10.40.93.175 (changes with WiFi)
+  
+  static String _cachedUrl = 'http://10.40.93.175:3000/api';
+  static bool _isInitialized = false;
+  
+  /// Get base URL synchronously (use this in your code)
+  static String get baseUrl => _cachedUrl;
+  
+  /// Initialize from stored preferences (call at app startup)
+  static Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // 1. Check if user has set a custom URL
+      final savedUrl = prefs.getString('backend_url');
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        _cachedUrl = savedUrl;
+        _isInitialized = true;
+        return;
+      }
+      
+      // 2. Check environment variable
+      const envUrl = String.fromEnvironment('API_URL');
+      if (envUrl.isNotEmpty) {
+        _cachedUrl = envUrl;
+        _isInitialized = true;
+        return;
+      }
+      
+      // 3. Use default IP
+      const myDeviceIp = String.fromEnvironment('MY_IP', defaultValue: '10.40.93.175');
+      _cachedUrl = 'http://$myDeviceIp:3000/api';
+      _isInitialized = true;
+    } catch (e) {
+      // If anything fails, use default
+      _cachedUrl = 'http://10.40.93.175:3000/api';
+      _isInitialized = true;
     }
-    
-    // IMPORTANT: Change this IP to your computer's IP address when running on physical device
-    // To find your IP: Run 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
-    // Current IP: 192.168.29.106 (Sushil's PC)
-    // For others: Default is 'localhost' for local testing
-    const myDeviceIp = String.fromEnvironment('MY_IP', defaultValue: '192.168.29.106');
-    
-    // Default URLs for different platforms
-    // For Web/Emulator: Use localhost
-    // For Physical Device: Use computer's actual IP
-    return 'http://$myDeviceIp:3000/api';
+  }
+  
+  /// Manually update backend URL (called from Settings screen)
+  static Future<void> setUrl(String url) async {
+    try {
+      final cleanUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+      _cachedUrl = cleanUrl;
+      
+      // Save to preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('backend_url', cleanUrl);
+    } catch (e) {
+      // If save fails, at least update the cached value
+      _cachedUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+    }
+  }
+  
+  /// Reset to default IP
+  static Future<void> resetToDefault() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('backend_url');
+      
+      const myDeviceIp = String.fromEnvironment('MY_IP', defaultValue: '10.40.93.175');
+      _cachedUrl = 'http://$myDeviceIp:3000/api';
+    } catch (e) {
+      _cachedUrl = 'http://10.40.93.175:3000/api';
+    }
+  }
+  
+  /// Get saved URL from preferences
+  static Future<String?> getSavedUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('backend_url');
+    } catch (e) {
+      return null;
+    }
   }
   
   // API Endpoints

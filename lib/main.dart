@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'core/constants/api_config.dart';
 import 'services/token_service.dart';
 import 'services/notification_service.dart';
 
@@ -13,6 +14,9 @@ bool sessionCheckDone = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize API configuration from saved preferences
+  await ApiConfig.initialize();
   
   // Initialize notification service with callback
   await NotificationService.initialize(onNotificationTap: _handleNotificationTap);

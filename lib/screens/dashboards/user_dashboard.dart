@@ -51,6 +51,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         title: const Text('MediLinko'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Server Settings',
+            onPressed: () => context.push('/settings/server'),
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
           ),

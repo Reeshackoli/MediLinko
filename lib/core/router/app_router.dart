@@ -43,6 +43,9 @@ import '../../screens/patients/patient_profile_view_screen.dart';
 // --- Emergency ---
 import '../../screens/emergency/emergency_screen.dart';
 
+// --- Settings ---
+import '../../screens/settings/server_settings_screen.dart';
+
 // --- Models ---
 import '../../models/appointment_model.dart';
 import '../../models/doctor_location_model.dart';
@@ -73,6 +76,12 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/emergency',
       builder: (context, state) => const EmergencyScreen(),
+    ),
+    
+    // ------------------- Settings -------------------
+    GoRoute(
+      path: '/settings/server',
+      builder: (context, state) => const ServerSettingsScreen(),
     ),
     
     GoRoute(

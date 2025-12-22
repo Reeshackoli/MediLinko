@@ -2,6 +2,28 @@
 
 A comprehensive Flutter healthcare application with role-based access for Users, Doctors, and Pharmacists. Features include appointment booking, medicine tracking, fall detection emergency system, and more.
 
+---
+
+## 🌐 **NEW: Dynamic Server Configuration!**
+
+**No more changing code when you switch WiFi networks!** 
+
+### Quick Setup (10 seconds):
+1. Find your PC's IP: `ipconfig` → Look for IPv4 Address (e.g., 10.40.93.175)
+2. Open app → Tap ⚙️ **Settings** icon → Server Settings
+3. Enter: `http://YOUR_IP:3000/api`
+4. Tap **Save & Apply** 🎉
+
+**Or use ngrok** for internet access from anywhere:
+```bash
+ngrok http 3000
+# Copy HTTPS URL → Paste in app Settings
+```
+
+📖 **[Complete Server Setup Guide →](SERVER_CONFIGURATION.md)**
+
+---
+
 ## ✨ Key Features
 
 ### 🚨 Fall Detection Emergency System
