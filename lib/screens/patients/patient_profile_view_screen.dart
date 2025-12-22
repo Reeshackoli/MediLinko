@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/profile_service.dart';
 
@@ -65,7 +66,13 @@ class _PatientProfileViewScreenState extends ConsumerState<PatientProfileViewScr
         title: Text('Patient: ${widget.patientName}'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/doctor-dashboard');
+            }
+          },
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: AppTheme.primaryBlue,

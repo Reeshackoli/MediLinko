@@ -5,6 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/session_manager.dart';
 import '../../services/notification_service.dart';
+import '../../services/lockscreen_service.dart';
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -21,30 +22,48 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   void initState() {
     super.initState();
     _loadEmergencyData();
-    _enableWakelock();
+    _enableEmergencyMode();
   }
 
-  Future<void> _enableWakelock() async {
+  Future<void> _enableEmergencyMode() async {
     try {
+      // Enable wakelock to keep screen on
       await WakelockPlus.enable();
       debugPrint('🔒 Screen wakelock enabled - screen will stay ON');
+      
+      // Enable lock screen flags to show over lock screen
+      final lockScreenEnabled = await LockScreenService.enableLockScreenFlags();
+      if (lockScreenEnabled) {
+        debugPrint('🔓 Lock screen flags ENABLED - app will show over lock screen');
+      } else {
+        debugPrint('⚠️ Failed to enable lock screen flags');
+      }
     } catch (e) {
-      debugPrint('⚠️ Failed to enable wakelock: $e');
+      debugPrint('⚠️ Failed to enable emergency mode: $e');
     }
   }
 
   @override
   void dispose() {
-    _disableWakelock();
+    _disableEmergencyMode();
     super.dispose();
   }
 
-  Future<void> _disableWakelock() async {
+  Future<void> _disableEmergencyMode() async {
     try {
+      // Disable wakelock
       await WakelockPlus.disable();
       debugPrint('🔓 Screen wakelock disabled');
+      
+      // Disable lock screen flags (return to normal secure behavior)
+      final lockScreenDisabled = await LockScreenService.disableLockScreenFlags();
+      if (lockScreenDisabled) {
+        debugPrint('🔒 Lock screen flags DISABLED - app will hide when locked (secure)');
+      } else {
+        debugPrint('⚠️ Failed to disable lock screen flags');
+      }
     } catch (e) {
-      debugPrint('⚠️ Failed to disable wakelock: $e');
+      debugPrint('⚠️ Failed to disable emergency mode: $e');
     }
   }
 
@@ -186,30 +205,63 @@ Emergency Contact 1: $emergencyContactName ($emergencyContactPhone)${emergencyCo
               ),
               const SizedBox(height: 24),
 
-              // QR Code
+              // QR Code with improved visibility
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     const Text(
                       'SCAN FOR FULL MEDICAL INFO',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
-                        letterSpacing: 1.2,
+                        letterSpacing: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade300, width: 2),
+                      ),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 180,
+                        backgroundColor: Colors.white,
+                        eyeStyle: const QrEyeStyle(
+                          eyeShape: QrEyeShape.square,
+                          color: Colors.black,
+                        ),
+                        dataModuleStyle: const QrDataModuleStyle(
+                          dataModuleShape: QrDataModuleShape.square,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    QrImageView(
-                      data: qrData,
-                      version: QrVersions.auto,
-                      size: 150,
-                      backgroundColor: Colors.white,
+                    const Text(
+                      '⚠️ High Contrast for Sunlight',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black54,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),
@@ -392,8 +444,8 @@ Emergency Contact 1: $emergencyContactName ($emergencyContactPhone)${emergencyCo
   }
 
   void _cancelEmergency() async {
-    // Disable wakelock first
-    await _disableWakelock();
+    // Disable emergency mode (wakelock and lock screen flags)
+    await _disableEmergencyMode();
     
     // Cancel notification
     NotificationService.cancelEmergencyNotification();

@@ -1,13 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 // Top-level function for background message handling
 @pragma('vm:entry-point')
@@ -32,6 +28,7 @@ class NotificationService {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Kolkata')); // Set to IST
 
+    // Initialize local notifications
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -62,12 +59,6 @@ class NotificationService {
 
   // Initialize Firebase Cloud Messaging
   static Future<void> _initializeFCM() async {
-    // Skip FCM on web platform
-    if (kIsWeb) {
-      debugPrint('⚠️ FCM not supported on web platform');
-      return;
-    }
-    
     try {
       // Request notification permissions (iOS & Android 13+)
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
@@ -134,35 +125,14 @@ class NotificationService {
 
   // Save FCM token to backend
   static Future<void> _saveFCMTokenToBackend(String token) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final authToken = prefs.getString('auth_token');
-      
-      if (authToken == null) {
-        debugPrint('⚠️ No auth token found, cannot save FCM token');
-        return;
-      }
-
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/fcm/save-token'), // Android emulator
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'token': token,
-          'device': Platform.operatingSystem,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        debugPrint('✅ FCM token saved to backend successfully');
-      } else {
-        debugPrint('⚠️ Failed to save FCM token: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('❌ Error saving FCM token to backend: $e');
-    }
+    // TODO: Call your backend API to save FCM token
+    // Example:
+    // await http.post(
+    //   Uri.parse('${ApiConstants.baseUrl}/api/fcm/save-token'),
+    //   headers: {'Authorization': 'Bearer $userToken'},
+    //   body: {'token': token, 'device': 'android/ios'},
+    // );
+    debugPrint('💾 FCM token should be saved to backend: $token');
   }
 
   // Handle foreground messages (when app is open)
@@ -273,85 +243,9 @@ class NotificationService {
     _onNotificationTapCallback?.call(response.payload);
   }
 
-  // Show high-priority full-screen intent notification for emergency
-  static Future<void> showEmergencyNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      'emergency_channel',
-      'Emergency Alerts',
-      channelDescription: 'Critical fall detection emergency alerts',
-      importance: Importance.max,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
-      ongoing: true,
-      autoCancel: false,
-      enableVibration: true,
-      enableLights: true,
-      playSound: true,
-      sound: RawResourceAndroidNotificationSound('notification'),
-      color: Color(0xFFFF0000), // Red color
-      ledColor: Color(0xFFFF0000),
-      ledOnMs: 1000,
-      ledOffMs: 500,
-      ticker: 'MEDICAL EMERGENCY',
-    );
+  // ==================== MEDICINE REMINDERS ====================
 
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      interruptionLevel: InterruptionLevel.critical,
-      sound: 'default',
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _notifications.show(
-      999, // Emergency notification ID
-      '🚨 MEDICAL EMERGENCY',
-      'Fall detected! Tap to view emergency profile',
-      details,
-      payload: 'EMERGENCY_MODE',
-    );
-
-    debugPrint('🚨 Emergency notification sent with payload');
-  }
-
-  // Cancel emergency notification
-  static Future<void> cancelEmergencyNotification() async {
-    await _notifications.cancel(999);
-    debugPrint('✅ Emergency notification cancelled');
-  }
-
-  // Request notification permissions
-  static Future<bool> requestPermissions() async {
-    final androidImpl = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
-    if (androidImpl != null) {
-      final granted = await androidImpl.requestNotificationsPermission();
-      return granted ?? false;
-    }
-    
-    final iosImpl = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    
-    if (iosImpl != null) {
-      final granted = await iosImpl.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      return granted ?? false;
-    }
-    
-    return false;
-  }
-
-  // Schedule daily medicine reminder
+  // Schedule medicine reminder (daily recurring)
   static Future<void> scheduleMedicineReminder({
     required int id,
     required String medicineName,
@@ -368,7 +262,7 @@ class NotificationService {
       time.minute,
     );
 
-    // If the time has already passed today, schedule for tomorrow
+    // If time has passed today, schedule for tomorrow
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
@@ -376,197 +270,9 @@ class NotificationService {
     const androidDetails = AndroidNotificationDetails(
       'medicine_alerts',
       'Medicine Reminders',
-      channelDescription: 'Notifications for medicine reminders',
+      channelDescription: 'Daily medicine reminder notifications',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-      enableVibration: true,
-      playSound: true,
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    try {
-      await _notifications.zonedSchedule(
-        id,
-        '💊 Medicine Reminder',
-        '$medicineName - $dosage',
-        scheduledDate,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
-        payload: 'medicine_$id',
-      );
-
-      debugPrint('✅ Medicine reminder scheduled: $medicineName at ${time.hour}:${time.minute}');
-    } catch (e) {
-      debugPrint('❌ Error scheduling medicine reminder: $e');
-      rethrow;
-    }
-  }
-
-  // Cancel medicine reminder
-  static Future<void> cancelMedicineReminder(int id) async {
-    await _notifications.cancel(id);
-    debugPrint('✅ Medicine reminder cancelled: ID $id');
-  }
-
-  // Test notification (immediate)
-  static Future<void> showTestNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      'medicine_alerts',
-      'Medicine Reminders',
-      channelDescription: 'Test notification',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-      enableVibration: true,
-      playSound: true,
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _notifications.show(
-      999999,
-      '🔔 Test Notification',
-      'If you see this, notifications are working!',
-      details,
-      payload: 'test',
-    );
-
-    debugPrint('✅ Test notification sent');
-  }
-
-  // Get all scheduled notifications
-  static Future<List<PendingNotificationRequest>> getPendingNotifications() async {
-    return await _notifications.pendingNotificationRequests();
-  }
-
-  // Show appointment notification (for doctor - new appointment request)
-  static Future<void> showNewAppointmentNotification({
-    required String patientName,
-    required String date,
-    required String time,
-  }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'appointment_alerts',
-      'Appointment Updates',
-      channelDescription: 'Notifications for appointment status changes',
-      importance: Importance.high,
-      priority: Priority.high,
-      enableVibration: true,
-      playSound: true,
-      icon: '@mipmap/ic_launcher',
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      '📅 New Appointment Request',
-      'Patient: $patientName\n$date at $time',
-      details,
-      payload: 'appointment_new',
-    );
-
-    debugPrint('✅ New appointment notification sent');
-  }
-
-  // Show appointment status notification (for patient - appointment approved)
-  static Future<void> showAppointmentStatusNotification({
-    required String status,
-    required String doctorName,
-    required String date,
-    required String time,
-  }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'appointment_alerts',
-      'Appointment Updates',
-      channelDescription: 'Notifications for appointment status changes',
-      importance: Importance.high,
-      priority: Priority.high,
-      enableVibration: true,
-      playSound: true,
-      icon: 'ic_notification',
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    String title, body;
-    if (status == 'approved') {
-      title = '✅ Appointment Approved!';
-      body = 'Dr. $doctorName\n$date at $time\nCheck details in app';
-    } else if (status == 'rejected') {
-      title = '❌ Appointment Rejected';
-      body = 'Dr. $doctorName\n$date at $time';
-    } else {
-      title = '📅 Appointment Update';
-      body = 'Status: $status\nDr. $doctorName';
-    }
-
-    await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      title,
-      body,
-      details,
-      payload: 'appointment_status_$status',
-    );
-
-    debugPrint('✅ Appointment status notification sent: $status');
-  }
-
-  // Schedule appointment reminder (1 hour before)
-  static Future<void> scheduleAppointmentReminder({
-    required String appointmentId,
-    required String doctorName,
-    required DateTime scheduledTime,
-  }) async {
-    final scheduledTz = tz.TZDateTime.from(scheduledTime, tz.local);
-
-    const androidDetails = AndroidNotificationDetails(
-      'appointment_channel',
-      'Appointment Notifications',
-      channelDescription: 'Appointment reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      enableVibration: true,
-      playSound: true,
       icon: '@mipmap/ic_launcher',
     );
 
@@ -582,15 +288,194 @@ class NotificationService {
     );
 
     await _notifications.zonedSchedule(
-      appointmentId.hashCode,
-      '⏰ Appointment Reminder',
-      'Your appointment with Dr. $doctorName is in 1 hour',
-      scheduledTz,
+      id,
+      '💊 Medicine Reminder',
+      '$medicineName - $dosage',
+      scheduledDate,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: 'appointment_reminder_$appointmentId',
+      matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
     );
 
-    debugPrint('✅ Appointment reminder scheduled for $scheduledTime');
+    // Save reminder to SharedPreferences
+    await _saveReminderToPrefs(id, medicineName, dosage, time);
+
+    debugPrint('✅ Medicine reminder scheduled: $medicineName at ${time.format}');
+  }
+
+  // Cancel medicine reminder
+  static Future<void> cancelMedicineReminder(int id) async {
+    await _notifications.cancel(id);
+    await _removeReminderFromPrefs(id);
+    debugPrint('❌ Medicine reminder cancelled: ID $id');
+  }
+
+  // Get all scheduled reminders
+  static Future<List<Map<String, dynamic>>> getScheduledReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((key) => key.startsWith('reminder_'));
+    
+    List<Map<String, dynamic>> reminders = [];
+    for (String key in keys) {
+      final data = prefs.getString(key);
+      if (data != null) {
+        // Parse stored reminder data (format: "medicineName|dosage|hour|minute")
+        final parts = data.split('|');
+        if (parts.length == 4) {
+          reminders.add({
+            'id': int.parse(key.replaceAll('reminder_', '')),
+            'medicineName': parts[0],
+            'dosage': parts[1],
+            'hour': int.parse(parts[2]),
+            'minute': int.parse(parts[3]),
+          });
+        }
+      }
+    }
+    
+    return reminders;
+  }
+
+  // Save reminder to SharedPreferences
+  static Future<void> _saveReminderToPrefs(
+    int id,
+    String medicineName,
+    String dosage,
+    TimeOfDay time,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = '$medicineName|$dosage|${time.hour}|${time.minute}';
+    await prefs.setString('reminder_$id', data);
+  }
+
+  // Remove reminder from SharedPreferences
+  static Future<void> _removeReminderFromPrefs(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('reminder_$id');
+  }
+
+  // ==================== APPOINTMENT NOTIFICATIONS ====================
+
+  // Show new appointment notification (for doctors)
+  static Future<void> showNewAppointmentNotification({
+    required String patientName,
+    required String date,
+    required String time,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'appointment_alerts',
+      'Appointment Updates',
+      channelDescription: 'New appointment requests',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      '🔔 New Appointment Request',
+      '$patientName requested an appointment on $date at $time',
+      details,
+      payload: 'appointment_request',
+    );
+  }
+
+  // Show appointment status notification (for patients)
+  static Future<void> showAppointmentStatusNotification({
+    required String status,
+    required String doctorName,
+    required String date,
+    required String time,
+  }) async {
+    final emoji = status == 'approved' ? '✅' : '❌';
+    
+    const androidDetails = AndroidNotificationDetails(
+      'appointment_alerts',
+      'Appointment Updates',
+      channelDescription: 'Appointment status changes',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      '$emoji Appointment $status',
+      'Dr. $doctorName has $status your appointment on $date at $time',
+      details,
+      payload: 'appointment_status',
+    );
+  }
+
+  // Show emergency notification with full-screen intent
+  static Future<void> showEmergencyNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'emergency_channel',
+      'Emergency Alerts',
+      channelDescription: 'Critical fall detection emergency alerts',
+      importance: Importance.max,
+      priority: Priority.high,
+      category: AndroidNotificationCategory.alarm,
+      fullScreenIntent: true,
+      ongoing: true,
+      autoCancel: false,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.critical,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      999,
+      '🚨 EMERGENCY: Fall Detected',
+      'A fall has been detected. Emergency contacts have been notified.',
+      details,
+      payload: 'emergency',
+    );
+  }
+
+  // Request notification permissions
+  static Future<bool> requestPermissions() async {
+    if (_isInitialized) {
+      final settings = await _firebaseMessaging.requestPermission();
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
+    }
+    return false;
+  }
+
+  // Cancel all notifications
+  static Future<void> cancelAll() async {
+    await _notifications.cancelAll();
+    debugPrint('❌ All notifications cancelled');
   }
 }

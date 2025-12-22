@@ -4,6 +4,7 @@ const helmet = require('helmet');
 // const morgan = require('morgan'); // Disabled to reduce memory usage
 const dotenv = require('dotenv');
 const connectDatabase = require('./config/database');
+const { admin, messaging } = require('./config/firebase'); // Initialize Firebase
 
 // Load environment variables
 dotenv.config();
@@ -38,8 +39,10 @@ app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/medicines', require('./routes/medicineStockRoutes'));
 app.use('/api/medicine', require('./routes/medicineRoutes'));
+app.use('/api/medicine-reminders', require('./routes/medicineRemindersRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/fcm', require('./routes/fcmRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

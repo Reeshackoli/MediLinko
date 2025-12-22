@@ -3,6 +3,7 @@ const User = require('../models/User');
 const DoctorProfile = require('../models/DoctorProfile');
 const Notification = require('../models/Notification');
 const HealthProfile = require('../models/HealthProfile');
+const { sendNotificationToUser } = require('./notificationController');
 
 // @desc    Book a new appointment
 // @route   POST /api/appointments/book
@@ -61,6 +62,26 @@ exports.bookAppointment = async (req, res) => {
 
     await appointment.populate('userId', 'fullName email phone');
     await appointment.populate('doctorId', 'fullName email specialization clinicName consultationFee');
+
+    // Send FCM notification to doctor
+    try {
+      const patientName = appointment.userId.fullName || 'A patient';
+      await sendNotificationToUser(doctorId, {
+        title: '🔔 New Appointment Request',
+        body: `${patientName} has requested an appointment on ${date} at ${time}`,
+        data: {
+          type: 'new_appointment',
+          appointmentId: appointment._id.toString(),
+          patientId: userId.toString(),
+          date,
+          time,
+        },
+      });
+      console.log('✅ FCM notification sent to doctor');
+    } catch (fcmError) {
+      console.error('⚠️ Failed to send FCM notification:', fcmError);
+      // Don't fail the request if FCM fails
+    }
 
     res.status(201).json({
       success: true,
@@ -336,6 +357,22 @@ exports.updateAppointmentStatus = async (req, res) => {
           },
         });
 
+        // Send FCM notification
+        await sendNotificationToUser(appointment.userId._id, {
+          title: '❌ Appointment Rejected',
+          body: reason 
+            ? `Dr. ${doctorName} rejected your appointment. Reason: ${reason}`
+            : `Dr. ${doctorName} rejected your appointment on ${appointment.date} at ${appointment.time}`,
+          data: {
+            type: 'appointment_status',
+            status: 'rejected',
+            appointmentId: appointment._id.toString(),
+            doctorId: appointment.doctorId._id.toString(),
+            date: appointment.date,
+            time: appointment.time,
+          },
+        });
+
         console.log('✅ Rejection notification created for patient');
       } catch (notifError) {
         console.error('⚠️ Failed to create notification:', notifError);
@@ -360,6 +397,20 @@ exports.updateAppointmentStatus = async (req, res) => {
             date: appointment.date,
             time: appointment.time,
             status: 'approved',
+          },
+        });
+
+        // Send FCM notification
+        await sendNotificationToUser(appointment.userId._id, {
+          title: '✅ Appointment Approved',
+          body: `Dr. ${doctorName} approved your appointment on ${appointment.date} at ${appointment.time}`,
+          data: {
+            type: 'appointment_status',
+            status: 'approved',
+            appointmentId: appointment._id.toString(),
+            doctorId: appointment.doctorId._id.toString(),
+            date: appointment.date,
+            time: appointment.time,
           },
         });
 

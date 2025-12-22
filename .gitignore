@@ -48,6 +48,13 @@ app.*.map.json
 /backend/node_modules/
 /backend/.env
 /backend/package-lock.json
+/backend/config/firebase-service-account.json
+backend/config/firebase-service-account.json
+
+# Firebase sensitive files
+**/firebase-service-account.json
+google-services.json
+android/app/google-services.json
 
 # Environment files
 *.env

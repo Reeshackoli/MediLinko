@@ -39,6 +39,25 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  fcmTokens: [{
+    token: String,
+    device: String,
+    updatedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Medicine reminders
+  medicines: [{
+    id: Number,
+    name: String,
+    dosage: String,
+    time: String, // Format: "HH:mm"
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   // Clinic location for doctors (used in map search)
   clinicLatitude: {
     type: Number,
