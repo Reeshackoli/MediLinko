@@ -23,49 +23,63 @@ class MedicineTrackerService {
         throw Exception('Not authenticated');
       }
 
+      final requestBody = {
+        'medicineName': medicineName,
+        'dosage': dosage,
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+        if (notes != null) 'notes': notes,
+        'doses': doses.map((d) => d.toJson()).toList(),
+      };
+
+      debugPrint('📤 Adding medicine: ${ApiConfig.baseUrl}/user-medicines');
+      debugPrint('📦 Request body: $requestBody');
+
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/medicine/add'),
+        Uri.parse('${ApiConfig.baseUrl}/user-medicines'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'medicineName': medicineName,
-          'dosage': dosage,
-          if (startDate != null) 'startDate': startDate.toIso8601String(),
-          if (endDate != null) 'endDate': endDate.toIso8601String(),
-          if (notes != null) 'notes': notes,
-          'doses': doses.map((d) => d.toJson()).toList(),
-        }),
+        body: jsonEncode(requestBody),
       );
+
+      debugPrint('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 && data['success'] == true) {
         // Schedule notifications for each dose
-        for (var dose in doses) {
-          final timeParts = dose.time.split(' ');
-          final hourMinute = timeParts[0].split(':');
-          int hour = int.parse(hourMinute[0]);
-          final minute = int.parse(hourMinute[1]);
-          
-          // Convert to 24-hour format
-          if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'PM' && hour != 12) {
-            hour += 12;
-          } else if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'AM' && hour == 12) {
-            hour = 0;
+        try {
+          for (var dose in doses) {
+            final timeParts = dose.time.split(' ');
+            final hourMinute = timeParts[0].split(':');
+            int hour = int.parse(hourMinute[0]);
+            final minute = int.parse(hourMinute[1]);
+            
+            // Convert to 24-hour format
+            if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'PM' && hour != 12) {
+              hour += 12;
+            } else if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'AM' && hour == 12) {
+              hour = 0;
+            }
+            
+            // Generate unique ID within 32-bit range (use hash of medicine name + time)
+            final uniqueString = '$medicineName-${dose.time}';
+            final notificationId = uniqueString.hashCode.abs() % 2147483647; // Max 32-bit int
+            
+            await NotificationService.scheduleMedicineReminder(
+              id: notificationId,
+              medicineName: medicineName,
+              dosage: dosage,
+              time: TimeOfDay(hour: hour, minute: minute),
+            );
           }
-          
-          // Generate unique ID within 32-bit range (use hash of medicine name + time)
-          final uniqueString = '$medicineName-${dose.time}';
-          final notificationId = uniqueString.hashCode.abs() % 2147483647; // Max 32-bit int
-          
-          await NotificationService.scheduleMedicineReminder(
-            id: notificationId,
-            medicineName: medicineName,
-            dosage: dosage,
-            time: TimeOfDay(hour: hour, minute: minute),
-          );
+        } catch (notifError) {
+          // Log notification error but don't fail the whole operation
+          debugPrint('⚠️ Error scheduling notifications: $notifError');
+          // Medicine was still added successfully to database
         }
         
         return data;
@@ -73,6 +87,7 @@ class MedicineTrackerService {
         throw Exception(data['message'] ?? 'Failed to add medicine');
       }
     } catch (e) {
+      debugPrint('❌ Error adding medicine: $e');
       throw Exception('Error adding medicine: $e');
     }
   }
@@ -88,7 +103,7 @@ class MedicineTrackerService {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/medicine/calendar?month=$month&year=$year'),
+        Uri.parse('${ApiConfig.baseUrl}/medicine-reminders/calendar?month=$month&year=$year'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -135,12 +150,12 @@ class MedicineTrackerService {
 
   static Future<Map<String, dynamic>> updateMedicine({
     required String medicineId,
-    String? medicineName,
-    String? dosage,
+    required String medicineName,
+    required String dosage,
     DateTime? startDate,
     DateTime? endDate,
     String? notes,
-    List<MedicineDose>? doses,
+    required List<MedicineDose> doses,
   }) async {
     try {
       final token = await _tokenService.getToken();
@@ -148,22 +163,29 @@ class MedicineTrackerService {
         throw Exception('Not authenticated');
       }
 
-      final Map<String, dynamic> updateData = {};
-      if (medicineName != null) updateData['medicineName'] = medicineName;
-      if (dosage != null) updateData['dosage'] = dosage;
-      if (startDate != null) updateData['startDate'] = startDate.toIso8601String();
-      if (endDate != null) updateData['endDate'] = endDate.toIso8601String();
-      if (notes != null) updateData['notes'] = notes;
-      if (doses != null) updateData['doses'] = doses.map((d) => d.toJson()).toList();
+      final requestBody = {
+        'medicineName': medicineName,
+        'dosage': dosage,
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+        if (notes != null) 'notes': notes,
+        'doses': doses.map((d) => d.toJson()).toList(),
+      };
+
+      debugPrint('📤 Updating medicine: ${ApiConfig.baseUrl}/user-medicines/$medicineId');
+      debugPrint('📦 Request body: $requestBody');
 
       final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}/medicine/update/$medicineId'),
+        Uri.parse('${ApiConfig.baseUrl}/user-medicines/$medicineId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(updateData),
+        body: jsonEncode(requestBody),
       );
+
+      debugPrint('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -173,6 +195,7 @@ class MedicineTrackerService {
         throw Exception(data['message'] ?? 'Failed to update medicine');
       }
     } catch (e) {
+      debugPrint('❌ Error updating medicine: $e');
       throw Exception('Error updating medicine: $e');
     }
   }
@@ -184,12 +207,17 @@ class MedicineTrackerService {
         throw Exception('Not authenticated');
       }
 
+      debugPrint('📤 Deleting medicine: ${ApiConfig.baseUrl}/user-medicines/$medicineId');
+
       final response = await http.delete(
-        Uri.parse('${ApiConfig.baseUrl}/medicine/delete/$medicineId'),
+        Uri.parse('${ApiConfig.baseUrl}/user-medicines/$medicineId'),
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
+
+      debugPrint('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -199,6 +227,7 @@ class MedicineTrackerService {
         throw Exception(data['message'] ?? 'Failed to delete medicine');
       }
     } catch (e) {
+      debugPrint('❌ Error deleting medicine: $e');
       throw Exception('Error deleting medicine: $e');
     }
   }

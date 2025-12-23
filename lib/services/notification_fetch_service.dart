@@ -89,7 +89,7 @@ class NotificationFetchService {
       if (token == null) return false;
 
       final response = await http.patch(
-        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/mark-all-read'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -132,6 +132,33 @@ class NotificationFetchService {
       }
     } catch (e) {
       debugPrint('❌ Error deleting notification: $e');
+      return false;
+    }
+  }
+
+  /// Delete all notifications
+  static Future<bool> deleteAllNotifications() async {
+    try {
+      final token = await TokenService().getToken();
+      if (token == null) return false;
+
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/notifications'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('✅ All notifications deleted');
+        return true;
+      } else {
+        debugPrint('❌ Failed to delete all notifications: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('❌ Error deleting all notifications: $e');
       return false;
     }
   }

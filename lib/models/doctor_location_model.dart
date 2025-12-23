@@ -12,6 +12,7 @@ class DoctorLocationModel {
   final String? clinicAddress;
   final List<String>? availableDays;
   final List<String>? timeSlots;
+  final double rating; // Doctor rating out of 5
 
   DoctorLocationModel({
     required this.id,
@@ -27,6 +28,7 @@ class DoctorLocationModel {
     this.clinicAddress,
     this.availableDays,
     this.timeSlots,
+    this.rating = 4.5, // Default rating
   });
 
   factory DoctorLocationModel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class DoctorLocationModel {
       timeSlots: json['timeSlots'] != null
           ? List<String>.from(json['timeSlots'])
           : null,
+      rating: (json['rating'] ?? 4.5).toDouble(),
     );
   }
 
@@ -66,6 +69,7 @@ class DoctorLocationModel {
       'clinicAddress': clinicAddress,
       'availableDays': availableDays,
       'timeSlots': timeSlots,
+      'rating': rating,
     };
   }
 
@@ -92,6 +96,7 @@ class DoctorLocationModel {
     String? clinicAddress,
     List<String>? availableDays,
     List<String>? timeSlots,
+    double? rating,
   }) {
     return DoctorLocationModel(
       id: id ?? this.id,
@@ -107,6 +112,7 @@ class DoctorLocationModel {
       clinicAddress: clinicAddress ?? this.clinicAddress,
       availableDays: availableDays ?? this.availableDays,
       timeSlots: timeSlots ?? this.timeSlots,
+      rating: rating ?? this.rating,
     );
   }
 

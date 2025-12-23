@@ -6,6 +6,7 @@ const {
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
   getUnreadCount,
 } = require('../controllers/notificationController');
 
@@ -15,5 +16,6 @@ router.get('/unread-count', protect, getUnreadCount);
 router.patch('/:id/read', protect, markAsRead);
 router.patch('/mark-all-read', protect, markAllAsRead);
 router.delete('/:id', protect, deleteNotification);
+router.delete('/', protect, deleteAllNotifications);
 
 module.exports = router;

@@ -8,11 +8,34 @@ const { admin, messaging } = require('../config/firebase');
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    const { read, limit = 50 } = req.query;
+    const { read, limit = 7 } = req.query;
 
     const filter = { userId };
     if (read !== undefined) {
       filter.read = read === 'true';
+    }
+
+    // Auto-cleanup: Delete notifications older than 1 day
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    await Notification.deleteMany({
+      userId,
+      createdAt: { $lt: oneDayAgo },
+    });
+
+    // Auto-cleanup: Keep only last 15 notifications
+    const totalCount = await Notification.countDocuments({ userId });
+    if (totalCount > 15) {
+      const notificationsToKeep = await Notification.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(15)
+        .select('_id');
+      
+      const idsToKeep = notificationsToKeep.map(n => n._id);
+      await Notification.deleteMany({
+        userId,
+        _id: { $nin: idsToKeep },
+      });
     }
 
     const notifications = await Notification.find(filter)
@@ -150,6 +173,30 @@ exports.deleteNotification = async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting notification:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Delete all notifications
+// @route   DELETE /api/notifications
+// @access  Private
+exports.deleteAllNotifications = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+
+    const result = await Notification.deleteMany({ userId });
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} notifications deleted`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error('Error deleting all notifications:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

@@ -59,6 +59,52 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  Future<void> _clearAllNotifications() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Clear All Notifications'),
+        content: const Text('This will permanently delete all notifications. Continue?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await NotificationFetchService.deleteAllNotifications();
+      if (success) {
+        await _loadNotifications();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('All notifications cleared'),
+                ],
+              ),
+              backgroundColor: Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _deleteNotification(NotificationItem notification) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -107,6 +153,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               icon: const Icon(Icons.done_all, color: Colors.white),
               label: const Text('Mark all read', style: TextStyle(color: Colors.white)),
               onPressed: _markAllAsRead,
+            ),
+          if (_notifications.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep_rounded),
+              tooltip: 'Clear All',
+              onPressed: _clearAllNotifications,
             ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Premium Color Palette
@@ -33,6 +34,12 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  static const LinearGradient authGradient = LinearGradient(
+    colors: [Color(0xFF4C9AFF), Color(0xFF5FD4C4), Color(0xFF667EEA)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const LinearGradient warmGradient = LinearGradient(
     colors: [Color(0xFFFF8B7B), Color(0xFFFFB88C)],
     begin: Alignment.topLeft,
@@ -43,6 +50,107 @@ class AppTheme {
     colors: [secondaryTeal, Color(0xFF64D9C5)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  // Premium Text Styles
+  static TextStyle get displayLarge => GoogleFonts.poppins(
+    fontSize: 57,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.25,
+    color: textPrimary,
+  );
+
+  static TextStyle get displayMedium => GoogleFonts.poppins(
+    fontSize: 45,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+  );
+
+  static TextStyle get displaySmall => GoogleFonts.poppins(
+    fontSize: 36,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
+
+  static TextStyle get headlineLarge => GoogleFonts.poppins(
+    fontSize: 32,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.5,
+    color: textPrimary,
+  );
+
+  static TextStyle get headlineMedium => GoogleFonts.poppins(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
+
+  static TextStyle get headlineSmall => GoogleFonts.poppins(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
+
+  static TextStyle get titleLarge => GoogleFonts.montserrat(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
+
+  static TextStyle get titleMedium => GoogleFonts.montserrat(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.15,
+    color: textPrimary,
+  );
+
+  static TextStyle get titleSmall => GoogleFonts.montserrat(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+    color: textPrimary,
+  );
+
+  static TextStyle get bodyLarge => GoogleFonts.lato(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.5,
+    color: textPrimary,
+  );
+
+  static TextStyle get bodyMedium => GoogleFonts.lato(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.25,
+    color: textSecondary,
+  );
+
+  static TextStyle get bodySmall => GoogleFonts.lato(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.4,
+    color: textSecondary,
+  );
+
+  static TextStyle get labelLarge => GoogleFonts.montserrat(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+    color: textPrimary,
+  );
+
+  static TextStyle get labelMedium => GoogleFonts.montserrat(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    color: textSecondary,
+  );
+
+  static TextStyle get labelSmall => GoogleFonts.montserrat(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    color: textHint,
   );
 
   static ThemeData get lightTheme {
@@ -59,21 +167,44 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: backgroundColor,
+      
+      // Typography with Google Fonts
+      textTheme: TextTheme(
+        displayLarge: displayLarge,
+        displayMedium: displayMedium,
+        displaySmall: displaySmall,
+        headlineLarge: headlineLarge,
+        headlineMedium: headlineMedium,
+        headlineSmall: headlineSmall,
+        titleLarge: titleLarge,
+        titleMedium: titleMedium,
+        titleSmall: titleSmall,
+        bodyLarge: bodyLarge,
+        bodyMedium: bodyMedium,
+        bodySmall: bodySmall,
+        labelLarge: labelLarge,
+        labelMedium: labelMedium,
+        labelSmall: labelSmall,
+      ),
+      
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceLight,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: GoogleFonts.poppins(
           color: textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
         iconTheme: const IconThemeData(color: primaryBlue),
+        actionsIconTheme: const IconThemeData(color: primaryBlue),
       ),
+      
       cardTheme: CardThemeData(
         color: surfaceLight,
-        elevation: 0,
+        elevation: 2,
         shadowColor: primaryBlue.withOpacity(0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -145,53 +276,6 @@ class AppTheme {
         hintStyle: const TextStyle(
           color: textHint,
           fontSize: 14,
-        ),
-      ),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-          letterSpacing: -1,
-          height: 1.2,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-          letterSpacing: -0.8,
-          height: 1.3,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          letterSpacing: -0.5,
-          height: 1.4,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          letterSpacing: -0.3,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: textPrimary,
-          height: 1.5,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: textSecondary,
-          height: 1.5,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          letterSpacing: -0.2,
         ),
       ),
     );

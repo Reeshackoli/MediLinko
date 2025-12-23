@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/health_profile_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -122,15 +123,24 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
         'emergencyContactPhone': _emergencyPhoneController.text.trim(),
       };
 
+      debugPrint('📤 Updating profile with: $profileData');
       final response = await ProfileService.updateProfile(profileData);
+      debugPrint('📥 Update response: $response');
       
       if (response['success'] == true) {
         // Refresh profile data
         ref.invalidate(healthProfileProvider);
+        
+        // Also refresh auth state if user data changed
+        await ref.read(authProvider.notifier).refreshUser();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!')),
+            SnackBar(
+              content: const Text('Profile updated successfully!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
           context.pop();
         }

@@ -40,6 +40,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/medicines', require('./routes/medicineStockRoutes'));
 app.use('/api/medicine', require('./routes/medicineRoutes'));
 app.use('/api/medicine-reminders', require('./routes/medicineRemindersRoutes'));
+app.use('/api/user-medicines', require('./routes/medicineRemindersRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/fcm', require('./routes/fcmRoutes'));

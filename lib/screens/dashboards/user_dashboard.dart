@@ -7,7 +7,7 @@ import '../../providers/health_profile_provider.dart';
 import '../../services/fall_detection_service.dart';
 import '../../services/appointment_listener_service.dart';
 import '../../widgets/fall_detection_alert.dart';
-import '../../widgets/medicine_reminders_card.dart';
+import '../../widgets/todays_reminders_card.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
@@ -155,12 +155,12 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                               'Welcome back,',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           SlideTransition(
                             position: Tween<Offset>(
                               begin: const Offset(-0.5, 0),
@@ -170,9 +170,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                               user?.fullName ?? 'User',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 28,
+                                fontSize: 36,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
+                                letterSpacing: -0.8,
+                                height: 1.1,
                               ),
                             ),
                           ),
@@ -223,7 +224,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                 
                 const SizedBox(height: 20),
                 
-                // Medicine Reminders Card
+                // Today's Medicine Reminders
                 FadeTransition(
                   opacity: _cardAnimation,
                   child: SlideTransition(
@@ -231,7 +232,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       begin: const Offset(0, 0.3),
                       end: Offset.zero,
                     ).animate(_cardAnimation),
-                    child: const MedicineRemindersCard(),
+                    child: const TodaysRemindersCard(),
                   ),
                 ),
                 
@@ -254,14 +255,16 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                 const SizedBox(height: 16),
                 
                 // Action Cards Grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.1,
-                  children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 20),
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1.1,
+                    children: [
                     _buildAnimatedActionCard(
                       0,
                       Icons.medication_liquid_rounded,
@@ -296,26 +299,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                     ),
                   ],
                 ),
+              ),
               ]),
             ),
           ),
         ],
-      ),
-      floatingActionButton: ScaleTransition(
-        scale: _cardAnimation,
-        child: FloatingActionButton.extended(
-          onPressed: () => context.push('/user-dashboard/profile'),
-          backgroundColor: AppTheme.accentPurple,
-          elevation: 4,
-          icon: const Icon(Icons.person_rounded, color: Colors.white),
-          label: const Text(
-            'My Profile',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -513,31 +501,31 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
               onTap: onTap,
               borderRadius: BorderRadius.circular(20),
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: bgColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
                         icon,
-                        size: 32,
+                        size: 30,
                         color: iconColor,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
                       title,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
-                        height: 1.3,
+                        height: 1.2,
                       ),
                     ),
                   ],

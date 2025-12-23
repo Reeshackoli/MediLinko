@@ -23,6 +23,7 @@ import '../../screens/profile/user_profile_edit_screen.dart';
 // --- Doctor Profile ---
 import '../../screens/profile/doctor_profile_view_screen.dart';
 import '../../screens/profile/doctor_profile_edit_screen.dart';
+import '../../screens/doctors/public_doctor_profile_screen.dart';
 
 // --- Pharmacist Profile ---
 import '../../screens/profile/pharmacist_profile_view_screen.dart';
@@ -31,7 +32,8 @@ import '../../screens/profile/pharmacist_profile_edit_screen.dart';
 // --- Features ---
 import '../../screens/medicine_stock/medicine_list_screen.dart';
 import '../../screens/medicine_stock/add_medicine_screen.dart';
-import '../../screens/medicine_tracker/medicine_calendar_screen.dart';
+import '../../screens/medicine_tracker/medicine_tracker_screen_new.dart';
+import '../../screens/medicine_tracker/add_medicine_screen_new.dart';
 import '../../screens/maps/doctors_map_screen.dart';
 import '../../screens/maps/pharmacist_map_screen.dart';
 import '../../screens/appointments/book_appointment_screen.dart';
@@ -170,11 +172,18 @@ final GoRouter router = GoRouter(
     // ------------------- Shared Features -------------------
     GoRoute(
       path: '/medicine-tracker',
-      builder: (context, state) => const MedicineCalendarScreen(),
+      builder: (context, state) => const MedicineTrackerScreen(),
     ),
     GoRoute(
       path: '/doctors-map',
       builder: (context, state) => const DoctorsMapScreen(),
+    ),
+    GoRoute(
+      path: '/doctor-profile/:doctorId',
+      builder: (context, state) {
+        final doctor = state.extra as DoctorLocationModel;
+        return PublicDoctorProfileScreen(doctor: doctor);
+      },
     ),
     GoRoute(
       path: '/pharmacies-map',

@@ -8,33 +8,31 @@ import '../services/notification_service.dart';
 
 class AppointmentListenerService {
   static Timer? _appointmentTimer;
-  static String? _lastAppointmentStatus;
+  static final Set<String> _notifiedAppointments = {}; // Track notified appointment IDs
   static bool _isListening = false;
 
   // Start listening for appointment changes
+  // DISABLED: Backend now sends real-time FCM notifications immediately when:
+  // - Doctor approves/rejects appointment (appointmentController.js)
+  // - Patient books appointment (appointmentController.js) 
+  // No need for polling - notifications are instant via Firebase Cloud Messaging
   static void startListening({
     required String userRole,
     required String userId,
   }) {
-    if (_isListening) return;
-    
-    _isListening = true;
-    debugPrint('🎧 Starting appointment listener for $userRole');
-    
-    // Poll every 30 seconds for appointment changes
-    _appointmentTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-      await _checkAppointments(userRole: userRole, userId: userId);
-    });
+    debugPrint('⚠️ Appointment listener is DISABLED - backend sends real-time FCM notifications');
+    debugPrint('📱 FCM handles: appointment approvals, rejections, and new bookings');
+    // Polling disabled - all notifications are now real-time via FCM
   }
 
   // Stop listening
   static void stopListening() {
-    _appointmentTimer?.cancel();
-    _appointmentTimer = null;
-    _isListening = false;
-    debugPrint('🛑 Stopped appointment listener');
+    // No-op: listener is disabled, nothing to stop
+    debugPrint('⚠️ Appointment listener was already disabled');
   }
 
+  // DISABLED: Original polling methods below (kept for reference)
+  /*
   // Check for appointment updates
   static Future<void> _checkAppointments({
     required String userRole,
@@ -103,13 +101,22 @@ class AppointmentListenerService {
   // Handle patient-specific logic (status changes)
   static void _handlePatientAppointments(List appointments) {
     for (var apt in appointments) {
+      final appointmentId = apt['_id'] ?? '';
       final status = apt['status'];
       final doctorName = apt['doctorId']?['fullName'] ?? 'Doctor';
       final date = apt['date'] ?? '';
       final time = apt['time'] ?? '';
 
-      // Check if status changed from pending to approved
-      if (status == 'approved' && _lastAppointmentStatus != status) {
+      // Create unique key for this appointment + status combination
+      final notificationKey = '$appointmentId-$status';
+      
+      // Only notify if we haven't already notified for this appointment status
+      if (_notifiedAppointments.contains(notificationKey)) {
+        continue; // Skip - already notified
+      }
+
+      // Check if status is approved or rejected
+      if (status == 'approved') {
         NotificationService.showAppointmentStatusNotification(
           status: 'approved',
           doctorName: doctorName,
@@ -117,11 +124,9 @@ class AppointmentListenerService {
           time: time,
         );
         
-        debugPrint('🔔 Notified patient of approval');
-      }
-      
-      // Check if status changed to rejected
-      if (status == 'rejected' && _lastAppointmentStatus != status) {
+        _notifiedAppointments.add(notificationKey);
+        debugPrint('🔔 Notified patient of approval for $appointmentId');
+      } else if (status == 'rejected') {
         NotificationService.showAppointmentStatusNotification(
           status: 'rejected',
           doctorName: doctorName,
@@ -129,10 +134,9 @@ class AppointmentListenerService {
           time: time,
         );
         
-        debugPrint('🔔 Notified patient of rejection');
+        _notifiedAppointments.add(notificationKey);
+        debugPrint('🔔 Notified patient of rejection for $appointmentId');
       }
-      
-      _lastAppointmentStatus = status;
     }
   }
 
@@ -180,4 +184,5 @@ class AppointmentListenerService {
       }
     }
   }
+  */
 }

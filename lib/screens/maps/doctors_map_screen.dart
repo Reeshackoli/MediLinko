@@ -6,6 +6,8 @@ import '../../providers/map_provider.dart';
 import '../../widgets/map/doctor_info_card.dart';
 import '../../widgets/map/map_search_bar.dart';
 import '../../widgets/map/specialty_filter_chips.dart';
+import '../../core/theme/app_theme.dart';
+import 'doctors_list_view.dart';
 
 class DoctorsMapScreen extends ConsumerStatefulWidget {
   const DoctorsMapScreen({super.key});
@@ -16,6 +18,7 @@ class DoctorsMapScreen extends ConsumerStatefulWidget {
 
 class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
   late final MapController _mapController;
+  bool _isListView = false; // Toggle between map and list view
 
   @override
   void initState() {
@@ -149,48 +152,76 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
     final mapState = ref.watch(mapProvider);
     final currentLocation = mapState.currentLocation;
     
-    // Default center (Belgaum, Karnataka - where our sample doctors are)
-    // Coordinates: 15.8497, 74.4977
+    // Default center (Belgaum, Karnataka)
     final initialCenter = currentLocation != null
         ? LatLng(currentLocation.latitude, currentLocation.longitude)
-        : const LatLng(15.8497, 74.4977); // Belgaum center
+        : const LatLng(15.8497, 74.4977);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Find Doctors Near You'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1A1A),
+        title: Text(_isListView ? 'Doctors List' : 'Find Doctors'),
+        backgroundColor: const Color(0xFF4C9AFF),
+        foregroundColor: Colors.white,
         elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.1),
         actions: [
+          // View toggle button - Prominent
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Material(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  setState(() {
+                    _isListView = !_isListView;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isListView ? Icons.map_outlined : Icons.list_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isListView ? 'Map' : 'List',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           if (mapState.filteredDoctors.isNotEmpty)
             Center(
               child: Container(
                 margin: const EdgeInsets.only(right: 16),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C9AFF).withOpacity(0.1),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF4C9AFF).withOpacity(0.3),
-                    width: 1,
-                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.medical_services,
-                      size: 16,
-                      color: Color(0xFF4C9AFF),
-                    ),
+                    const Icon(Icons.medical_services, size: 16, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
                       '${mapState.filteredDoctors.length}',
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF4C9AFF),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -199,8 +230,31 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
             ),
         ],
       ),
-      body: Stack(
-        children: [
+      body: _isListView ? _buildListView() : _buildMapView(context, mapState, currentLocation, initialCenter),
+    );
+  }
+
+  Widget _buildListView() {
+    return Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: MapSearchBar(),
+        ),
+        // Specialty filters
+        SpecialtyFilterChips(),
+        // List view
+        const Expanded(
+          child: DoctorsListView(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapView(BuildContext context, dynamic mapState, dynamic currentLocation, LatLng initialCenter) {
+    return Stack(
+      children: [
           // Map
           FlutterMap(
             mapController: _mapController,
@@ -209,20 +263,13 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
               initialZoom: 13.0,
               minZoom: 5.0,
               maxZoom: 18.0,
-              onTap: (_, __) {
-                // Clear selection when tapping map
-                ref.read(mapProvider.notifier).clearSelection();
-              },
+              onTap: (_, __) => ref.read(mapProvider.notifier).clearSelection(),
             ),
             children: [
-              // OpenStreetMap tiles
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.medilinko.app',
-                tileProvider: NetworkTileProvider(),
               ),
-              
-              // Doctor markers
               MarkerLayer(
                 markers: [
                   ..._buildMarkers(),
@@ -233,23 +280,23 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
             ],
           ),
 
-          // Search bar at top
+          // Simple search bar
           Positioned(
-            top: 16,
-            left: 16,
-            right: 16,
+            top: 12,
+            left: 12,
+            right: 12,
             child: MapSearchBar(),
           ),
 
-          // Filter chips below search
+          // Specialty filters
           Positioned(
-            top: 76,
+            top: 68,
             left: 0,
             right: 0,
             child: SpecialtyFilterChips(),
           ),
 
-          // Loading indicator
+          // Loading
           if (mapState.isLoading || mapState.isLoadingLocation)
             Container(
               color: Colors.black26,
@@ -263,26 +310,26 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
           // Error message
           if (mapState.errorMessage != null && !mapState.isLoading)
             Positioned(
-              top: 140,
-              left: 16,
-              right: 16,
+              top: 130,
+              left: 12,
+              right: 12,
               child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
+                elevation: 2,
+                borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red),
+                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           mapState.errorMessage!,
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red, fontSize: 13),
                         ),
                       ),
                     ],
@@ -291,7 +338,7 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
               ),
             ),
 
-          // Doctor info card at bottom
+          // Doctor info card
           if (mapState.selectedDoctor != null)
             Positioned(
               bottom: 0,
@@ -300,71 +347,52 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
               child: DoctorInfoCard(doctor: mapState.selectedDoctor!),
             ),
 
-          // Recenter button
+          // Floating action buttons - simplified
           Positioned(
-            bottom: mapState.selectedDoctor != null ? 220 : 100,
-            right: 16,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(16),
-              shadowColor: Colors.black.withOpacity(0.15),
-              child: FloatingActionButton(
-                heroTag: 'recenterMapFab',
-                onPressed: _recenterMap,
-                backgroundColor: Colors.white,
-                elevation: 0,
-                child: const Icon(
-                  Icons.my_location,
-                  color: Color(0xFF4C9AFF),
-                  size: 26,
+            bottom: mapState.selectedDoctor != null ? 200 : 24,
+            right: 12,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Recenter button
+                FloatingActionButton(
+                  heroTag: 'recenterMap',
+                  onPressed: _recenterMap,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.my_location, color: Color(0xFF4C9AFF)),
                 ),
-              ),
-            ),
-          ),
-
-          // Refresh doctors button
-          Positioned(
-            bottom: mapState.selectedDoctor != null ? 220 : 32,
-            right: 16,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(16),
-              shadowColor: Colors.black.withOpacity(0.15),
-              child: FloatingActionButton(
-                heroTag: 'refreshDoctorsFab',
-                onPressed: () async {
-                  await ref.read(mapProvider.notifier).fetchAllDoctors();
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Found ${mapState.filteredDoctors.length} doctors'),
-                        backgroundColor: const Color(0xFF4C9AFF),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                },
-                backgroundColor: const Color(0xFF4C9AFF),
-                elevation: 0,
-                child: mapState.isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                const SizedBox(height: 12),
+                // Refresh button
+                FloatingActionButton(
+                  heroTag: 'refreshDoctors',
+                  onPressed: () async {
+                    await ref.read(mapProvider.notifier).fetchAllDoctors();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Found ${mapState.filteredDoctors.length} doctors'),
+                          backgroundColor: const Color(0xFF4C9AFF),
+                          duration: const Duration(seconds: 2),
                         ),
-                      )
-                    : const Icon(
-                        Icons.refresh,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-              ),
+                      );
+                    }
+                  },
+                  backgroundColor: const Color(0xFF4C9AFF),
+                  child: mapState.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.refresh, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    }
 }

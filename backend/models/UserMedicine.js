@@ -29,7 +29,22 @@ const userMedicineSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true,
-  }
+  },
+  // Track completion history
+  takenHistory: [{
+    date: {
+      type: String, // Format: "YYYY-MM-DD"
+      required: true,
+    },
+    time: {
+      type: String, // Format: "HH:mm" (24-hour)
+      required: true,
+    },
+    takenAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
 }, {
   timestamps: true
 });

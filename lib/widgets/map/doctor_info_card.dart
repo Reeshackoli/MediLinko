@@ -73,6 +73,29 @@ class DoctorInfoCard extends ConsumerWidget {
                                 ),
                               ),
                             ],
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                ...List.generate(5, (index) {
+                                  if (index < doctor.rating.floor()) {
+                                    return const Icon(Icons.star, color: Colors.amber, size: 18);
+                                  } else if (index < doctor.rating) {
+                                    return const Icon(Icons.star_half, color: Colors.amber, size: 18);
+                                  } else {
+                                    return Icon(Icons.star_border, color: Colors.grey[400], size: 18);
+                                  }
+                                }),
+                                const SizedBox(width: 6),
+                                Text(
+                                  doctor.rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF2D3748),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),

@@ -87,6 +87,23 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   void updateUser(UserModel user) {
     state = AsyncValue.data(user);
   }
+
+  // Refresh user data from backend
+  Future<void> refreshUser() async {
+    try {
+      final currentUser = state.value;
+      if (currentUser == null) return;
+
+      // Re-fetch user data would go here if you have an endpoint
+      // For now, just reload from session
+      final sessionData = await SessionManager.getUserSession();
+      if (sessionData != null) {
+        restoreUser(sessionData);
+      }
+    } catch (e) {
+      // Keep current state on error
+    }
+  }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>((ref) {

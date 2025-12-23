@@ -531,7 +531,7 @@ class NotificationService {
       priority: Priority.high,
       enableVibration: true,
       playSound: true,
-      icon: 'ic_notification',
+      icon: '@mipmap/ic_launcher',
     );
 
     const iosDetails = DarwinNotificationDetails(

@@ -74,8 +74,13 @@ class _AppointmentListScreenState extends ConsumerState<AppointmentListScreen> {
   }
 
   List<AppointmentModel> _filterAppointments(List<AppointmentModel> appointments) {
-    if (_selectedFilter == 'all') return appointments;
-    return appointments.where((a) => a.status == _selectedFilter).toList();
+    // Filter out cancelled and rejected appointments
+    final activeAppointments = appointments.where((a) => 
+      a.status != 'cancelled' && a.status != 'rejected'
+    ).toList();
+    
+    if (_selectedFilter == 'all') return activeAppointments;
+    return activeAppointments.where((a) => a.status == _selectedFilter).toList();
   }
 
   @override
@@ -130,22 +135,6 @@ class _AppointmentListScreenState extends ConsumerState<AppointmentListScreen> {
                     selectedValue: _selectedFilter,
                     onSelected: (value) => setState(() => _selectedFilter = value),
                     color: Colors.green,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Rejected',
-                    value: 'rejected',
-                    selectedValue: _selectedFilter,
-                    onSelected: (value) => setState(() => _selectedFilter = value),
-                    color: Colors.red,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Cancelled',
-                    value: 'cancelled',
-                    selectedValue: _selectedFilter,
-                    onSelected: (value) => setState(() => _selectedFilter = value),
-                    color: Colors.grey,
                   ),
                 ],
               ),

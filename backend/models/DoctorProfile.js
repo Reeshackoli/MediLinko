@@ -52,6 +52,12 @@ const doctorProfileSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
+  },
+  rating: {
+    type: Number,
+    default: 4.5,
+    min: 0,
+    max: 5
   }
 }, {
   timestamps: true
