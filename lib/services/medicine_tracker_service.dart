@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import '../core/constants/api_config.dart';
 import '../models/user_medicine.dart';
 import 'token_service.dart';
+import 'notification_service_fcm.dart';
 
 class MedicineTrackerService {
   static final TokenService _tokenService = TokenService();
@@ -40,6 +42,32 @@ class MedicineTrackerService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 && data['success'] == true) {
+        // Schedule notifications for each dose
+        for (var dose in doses) {
+          final timeParts = dose.time.split(' ');
+          final hourMinute = timeParts[0].split(':');
+          int hour = int.parse(hourMinute[0]);
+          final minute = int.parse(hourMinute[1]);
+          
+          // Convert to 24-hour format
+          if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'PM' && hour != 12) {
+            hour += 12;
+          } else if (timeParts.length > 1 && timeParts[1].toUpperCase() == 'AM' && hour == 12) {
+            hour = 0;
+          }
+          
+          // Generate unique ID within 32-bit range (use hash of medicine name + time)
+          final uniqueString = '$medicineName-${dose.time}';
+          final notificationId = uniqueString.hashCode.abs() % 2147483647; // Max 32-bit int
+          
+          await NotificationService.scheduleMedicineReminder(
+            id: notificationId,
+            medicineName: medicineName,
+            dosage: dosage,
+            time: TimeOfDay(hour: hour, minute: minute),
+          );
+        }
+        
         return data;
       } else {
         throw Exception(data['message'] ?? 'Failed to add medicine');

@@ -1,4 +1,6 @@
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const { admin, messaging } = require('../config/firebase');
 
 // @desc    Get user's notifications
 // @route   GET /api/notifications
@@ -153,5 +155,121 @@ exports.deleteNotification = async (req, res) => {
       message: 'Server error',
       error: error.message,
     });
+  }
+};
+
+// @desc    Send FCM notification to user
+// @access  Internal use only (called from other controllers)
+exports.sendNotificationToUser = async (userId, notificationData) => {
+  try {
+    console.log(`🔔 sendNotificationToUser called for userId: ${userId}`);
+    
+    // Find user and get FCM token
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      console.log(`⚠️ User not found: ${userId}`);
+      return { success: false, message: 'User not found' };
+    }
+    
+    console.log(`👤 User found: ${user.email}`);
+    console.log(`📱 FCM Token: ${user.fcmToken ? 'EXISTS' : 'NOT FOUND'}`);
+    
+    if (!user.fcmToken) {
+      console.log(`⚠️ No FCM token for user ${userId} (${user.email})`);
+      // Still save notification to database even if no FCM token
+      // Determine notification type from data or default to 'general'
+      const notificationType = notificationData.data?.appointmentId ? 'appointment' : 'general';
+      
+      await Notification.create({
+        userId,
+        title: notificationData.title,
+        message: notificationData.body,
+        type: notificationType,
+        data: notificationData.data || {},
+        read: false,
+      });
+      console.log(`💾 Notification saved to DB (type: ${notificationType})`);
+      return { success: false, message: 'User has no FCM token (notification saved to DB)' };
+    }
+
+    const { title, body, data } = notificationData;
+
+    // Prepare FCM message
+    const message = {
+      token: user.fcmToken,
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: data?.type === 'new_appointment' ? 'appointment_alerts' : 'high_importance_channel',
+          sound: 'default',
+          priority: 'high',
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
+        },
+      },
+    };
+
+    console.log(`📨 Sending FCM message:`, { title, body, type: data?.type });
+
+    // Send FCM notification
+    const response = await messaging.send(message);
+    console.log(`✅ FCM notification sent successfully to user ${userId}:`, response);
+
+    // Save notification to database
+    // Determine notification type from data or default to 'general'
+    const notificationType = data?.appointmentId ? 'appointment' : 
+                            data?.orderId ? 'order' : 
+                            data?.reminderType ? 'reminder' : 'general';
+    
+    await Notification.create({
+      userId,
+      title,
+      message: body,
+      type: notificationType,
+      data: data || {},
+      read: false,
+    });
+    console.log(`💾 Notification saved to DB (type: ${notificationType})`);
+
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error('❌ Error sending FCM notification:', error.message);
+    console.error('Error details:', error);
+    
+    // If token is invalid, clear it from user
+    if (error.code === 'messaging/invalid-registration-token' || 
+        error.code === 'messaging/registration-token-not-registered') {
+      await User.findByIdAndUpdate(userId, { fcmToken: null });
+      console.log(`🔄 Cleared invalid FCM token for user ${userId}`);
+    }
+    
+    // Still save notification to database
+    try {
+      await Notification.create({
+        userId,
+        title: notificationData.title,
+        message: notificationData.body,
+        type: notificationData.data?.type || 'general',
+        data: notificationData.data || {},
+        read: false,
+      });
+      console.log('💾 Notification saved to database despite FCM error');
+    } catch (dbError) {
+      console.error('❌ Failed to save notification to DB:', dbError);
+    }
+    
+    return { success: false, error: error.message };
   }
 };

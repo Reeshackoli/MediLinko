@@ -66,20 +66,27 @@ exports.bookAppointment = async (req, res) => {
     // Send FCM notification to doctor
     try {
       const patientName = appointment.userId.fullName || 'A patient';
-      await sendNotificationToUser(doctorId, {
+      console.log(`📱 Attempting to send FCM notification to doctor: ${doctorId}`);
+      
+      const notificationResult = await sendNotificationToUser(doctorId, {
         title: '🔔 New Appointment Request',
         body: `${patientName} has requested an appointment on ${date} at ${time}`,
         data: {
-          type: 'new_appointment',
+          type: 'appointment',
           appointmentId: appointment._id.toString(),
           patientId: userId.toString(),
           date,
           time,
         },
       });
-      console.log('✅ FCM notification sent to doctor');
+      
+      if (notificationResult.success) {
+        console.log('✅ FCM notification sent to doctor successfully');
+      } else {
+        console.error('⚠️ FCM notification failed:', notificationResult.message || notificationResult.error);
+      }
     } catch (fcmError) {
-      console.error('⚠️ Failed to send FCM notification:', fcmError);
+      console.error('⚠️ Exception sending FCM notification:', fcmError.message);
       // Don't fail the request if FCM fails
     }
 
@@ -319,7 +326,79 @@ exports.updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    // Update appointment status
+    // If cancelled or rejected, delete the appointment instead of keeping it
+    if (status === 'cancelled' || status === 'rejected') {
+      console.log(`🗑️ Deleting ${status} appointment`);
+      
+      // First populate for notification before deletion
+      await appointment.populate('userId', 'fullName email phone');
+      await appointment.populate('doctorId', 'fullName email phone specialization clinicName');
+      
+      // Send notification to patient if rejected by doctor
+      if (status === 'rejected' && isDoctor) {
+        try {
+          const doctorName = appointment.doctorId.fullName || 'Doctor';
+          const notificationMessage = reason 
+            ? `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected. Reason: ${reason}`
+            : `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected.`;
+
+          // Save to database
+          await Notification.create({
+            userId: appointment.userId._id,
+            title: 'Appointment Rejected',
+            message: notificationMessage,
+            type: 'appointment',
+            relatedId: appointment._id,
+            relatedModel: 'Appointment',
+            data: {
+              appointmentId: appointment._id,
+              doctorName,
+              date: appointment.date,
+              time: appointment.time,
+              status: 'rejected',
+              reason: reason || null,
+            },
+          });
+
+          // Send FCM notification
+          console.log(`📱 Sending rejection notification to patient: ${appointment.userId._id}`);
+          const rejectResult = await sendNotificationToUser(appointment.userId._id, {
+            title: '❌ Appointment Rejected',
+            body: reason 
+              ? `Dr. ${doctorName} rejected your appointment. Reason: ${reason}`
+              : `Dr. ${doctorName} rejected your appointment on ${appointment.date} at ${appointment.time}`,
+            data: {
+              type: 'appointment',
+              status: 'rejected',
+              appointmentId: appointment._id.toString(),
+              doctorId: appointment.doctorId._id.toString(),
+              date: appointment.date,
+              time: appointment.time,
+              reason: reason || '',
+            },
+          });
+
+          if (rejectResult.success) {
+            console.log('✅ Rejection notification sent to patient successfully');
+          } else {
+            console.error('⚠️ Rejection notification failed:', rejectResult.message);
+          }
+        } catch (notifError) {
+          console.error('⚠️ Failed to send rejection notification:', notifError);
+        }
+      }
+      
+      // Delete the appointment
+      await Appointment.findByIdAndDelete(id);
+      console.log(`✅ ${status.charAt(0).toUpperCase() + status.slice(1)} appointment deleted successfully`);
+      
+      return res.json({
+        success: true,
+        message: `Appointment ${status} and removed`,
+      });
+    }
+
+    // Update appointment status for other statuses (only approved now)
     appointment.status = status;
     if (reason) {
       appointment.rejectionReason = reason;
@@ -331,54 +410,6 @@ exports.updateAppointmentStatus = async (req, res) => {
     // Populate appointment details
     await appointment.populate('userId', 'fullName email phone');
     await appointment.populate('doctorId', 'fullName email phone specialization clinicName');
-
-    // Create notification for rejected appointments
-    if (status === 'rejected' && isDoctor) {
-      try {
-        const doctorName = appointment.doctorId.fullName || 'Doctor';
-        const notificationMessage = reason 
-          ? `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected. Reason: ${reason}`
-          : `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been rejected.`;
-
-        await Notification.create({
-          userId: appointment.userId._id,
-          title: 'Appointment Rejected',
-          message: notificationMessage,
-          type: 'appointment',
-          relatedId: appointment._id,
-          relatedModel: 'Appointment',
-          data: {
-            appointmentId: appointment._id,
-            doctorName,
-            date: appointment.date,
-            time: appointment.time,
-            status: 'rejected',
-            reason: reason || null,
-          },
-        });
-
-        // Send FCM notification
-        await sendNotificationToUser(appointment.userId._id, {
-          title: '❌ Appointment Rejected',
-          body: reason 
-            ? `Dr. ${doctorName} rejected your appointment. Reason: ${reason}`
-            : `Dr. ${doctorName} rejected your appointment on ${appointment.date} at ${appointment.time}`,
-          data: {
-            type: 'appointment_status',
-            status: 'rejected',
-            appointmentId: appointment._id.toString(),
-            doctorId: appointment.doctorId._id.toString(),
-            date: appointment.date,
-            time: appointment.time,
-          },
-        });
-
-        console.log('✅ Rejection notification created for patient');
-      } catch (notifError) {
-        console.error('⚠️ Failed to create notification:', notifError);
-        // Don't fail the request if notification fails
-      }
-    }
 
     // Create notification for approved appointments
     if (status === 'approved' && isDoctor) {
@@ -401,11 +432,12 @@ exports.updateAppointmentStatus = async (req, res) => {
         });
 
         // Send FCM notification
-        await sendNotificationToUser(appointment.userId._id, {
+        console.log(`📱 Sending approval notification to patient: ${appointment.userId._id}`);
+        const approvalResult = await sendNotificationToUser(appointment.userId._id, {
           title: '✅ Appointment Approved',
           body: `Dr. ${doctorName} approved your appointment on ${appointment.date} at ${appointment.time}`,
           data: {
-            type: 'appointment_status',
+            type: 'appointment',
             status: 'approved',
             appointmentId: appointment._id.toString(),
             doctorId: appointment.doctorId._id.toString(),
@@ -414,7 +446,11 @@ exports.updateAppointmentStatus = async (req, res) => {
           },
         });
 
-        console.log('✅ Approval notification created for patient');
+        if (approvalResult.success) {
+          console.log('✅ Approval notification sent to patient successfully');
+        } else {
+          console.error('⚠️ Approval notification failed:', approvalResult.message);
+        }
       } catch (notifError) {
         console.error('⚠️ Failed to create notification:', notifError);
       }

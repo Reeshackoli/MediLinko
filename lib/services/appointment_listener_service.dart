@@ -45,8 +45,8 @@ class AppointmentListenerService {
       if (token == null) return;
 
       final endpoint = userRole == 'doctor'
-          ? '/api/appointments/doctor'
-          : '/api/appointments';
+          ? '/appointments/doctor'
+          : '/appointments';
 
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}$endpoint'),

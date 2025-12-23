@@ -43,6 +43,9 @@ import '../../screens/patients/patient_profile_view_screen.dart';
 // --- Emergency ---
 import '../../screens/emergency/emergency_screen.dart';
 
+// --- Notifications ---
+import '../../screens/notifications/notifications_screen.dart';
+
 // --- Settings ---
 import '../../screens/settings/server_settings_screen.dart';
 
@@ -76,6 +79,12 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/emergency',
       builder: (context, state) => const EmergencyScreen(),
+    ),
+    
+    // ------------------- Notifications -------------------
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
     ),
     
     // ------------------- Settings -------------------

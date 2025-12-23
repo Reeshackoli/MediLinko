@@ -7,7 +7,7 @@ import '../../providers/health_profile_provider.dart';
 import '../../services/fall_detection_service.dart';
 import '../../services/appointment_listener_service.dart';
 import '../../widgets/fall_detection_alert.dart';
-import '../../widgets/medicine_reminders_dark_card.dart';
+import '../../widgets/medicine_reminders_card.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
@@ -191,7 +191,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
               ),
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                onPressed: () {},
+                onPressed: () => context.push('/notifications'),
               ),
               IconButton(
                 icon: const Icon(Icons.logout_rounded, color: Colors.white),
@@ -231,7 +231,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       begin: const Offset(0, 0.3),
                       end: Offset.zero,
                     ).animate(_cardAnimation),
-                    child: const MedicineRemindersDarkCard(),
+                    child: const MedicineRemindersCard(),
                   ),
                 ),
                 

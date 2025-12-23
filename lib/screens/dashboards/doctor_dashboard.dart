@@ -192,7 +192,7 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
             actions: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                onPressed: () {},
+                onPressed: () => context.push('/notifications'),
               ),
               IconButton(
                 icon: const Icon(Icons.logout_rounded, color: Colors.white),

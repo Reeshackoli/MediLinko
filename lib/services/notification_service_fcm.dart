@@ -4,6 +4,11 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
+import '../core/constants/api_config.dart';
+import 'token_service.dart';
 
 // Top-level function for background message handling
 @pragma('vm:entry-point')
@@ -78,6 +83,11 @@ class NotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fcm_token', _fcmToken ?? '');
 
+      // Save token to backend (will try to save, skip if no auth token yet)
+      if (_fcmToken != null) {
+        await _saveFCMTokenToBackend(_fcmToken!);
+      }
+
       // Listen for token refresh
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
@@ -125,14 +135,44 @@ class NotificationService {
 
   // Save FCM token to backend
   static Future<void> _saveFCMTokenToBackend(String token) async {
-    // TODO: Call your backend API to save FCM token
-    // Example:
-    // await http.post(
-    //   Uri.parse('${ApiConstants.baseUrl}/api/fcm/save-token'),
-    //   headers: {'Authorization': 'Bearer $userToken'},
-    //   body: {'token': token, 'device': 'android/ios'},
-    // );
-    debugPrint('💾 FCM token should be saved to backend: $token');
+    try {
+      debugPrint('💾 Attempting to save FCM token to backend...');
+      
+      final authToken = await TokenService().getToken();
+      if (authToken == null) {
+        debugPrint('⚠️ No auth token available to save FCM token');
+        return;
+      }
+
+      debugPrint('✅ Auth token found, proceeding with FCM token save');
+
+      final deviceType = Platform.isAndroid ? 'android' : Platform.isIOS ? 'ios' : 'unknown';
+      
+      debugPrint('📤 Sending request to ${ApiConfig.baseUrl}/fcm/save-token');
+      
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/fcm/save-token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({
+          'token': token,
+          'device': deviceType,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        debugPrint('💾 FCM token saved to backend successfully');
+      } else {
+        debugPrint('⚠️ Failed to save FCM token: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error saving FCM token to backend: $e');
+    }
   }
 
   // Handle foreground messages (when app is open)
