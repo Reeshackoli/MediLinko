@@ -32,9 +32,6 @@ class MedicineTrackerService {
         'doses': doses.map((d) => d.toJson()).toList(),
       };
 
-      debugPrint('📤 Adding medicine: ${ApiConfig.baseUrl}/user-medicines');
-      debugPrint('📦 Request body: $requestBody');
-
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/user-medicines'),
         headers: {
@@ -43,9 +40,6 @@ class MedicineTrackerService {
         },
         body: jsonEncode(requestBody),
       );
-
-      debugPrint('📥 Response status: ${response.statusCode}');
-      debugPrint('📥 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -172,9 +166,6 @@ class MedicineTrackerService {
         'doses': doses.map((d) => d.toJson()).toList(),
       };
 
-      debugPrint('📤 Updating medicine: ${ApiConfig.baseUrl}/user-medicines/$medicineId');
-      debugPrint('📦 Request body: $requestBody');
-
       final response = await http.put(
         Uri.parse('${ApiConfig.baseUrl}/user-medicines/$medicineId'),
         headers: {
@@ -183,9 +174,6 @@ class MedicineTrackerService {
         },
         body: jsonEncode(requestBody),
       );
-
-      debugPrint('📥 Response status: ${response.statusCode}');
-      debugPrint('📥 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 

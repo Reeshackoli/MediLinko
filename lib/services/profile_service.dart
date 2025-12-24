@@ -49,18 +49,6 @@ class ProfileService {
         };
       }
 
-      print('📤 Updating profile with data:');
-      print('   Keys: ${profileData.keys.toList()}');
-      if (profileData.containsKey('availableTimings')) {
-        print('   ✅ availableTimings: ${profileData['availableTimings']}');
-      }
-      if (profileData.containsKey('availableDays')) {
-        print('   ⚠️ OLD FORMAT - availableDays: ${profileData['availableDays']}');
-      }
-      if (profileData.containsKey('timeSlots')) {
-        print('   ⚠️ OLD FORMAT - timeSlots: ${profileData['timeSlots']}');
-      }
-
       final response = await http
           .put(
             Uri.parse(ApiConfig.profile),
@@ -126,8 +114,6 @@ class ProfileService {
         };
       }
 
-      print('📤 Fetching patient health profile: $userId');
-
       final response = await http
           .get(
             Uri.parse('${ApiConfig.baseUrl}/profile/patient/$userId'),
@@ -138,13 +124,9 @@ class ProfileService {
           )
           .timeout(ApiConfig.connectTimeout);
 
-      print('📥 Response status: ${response.statusCode}');
-      print('📥 Response body: ${response.body}');
-
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       return responseData;
     } catch (e) {
-      print('❌ Error fetching health profile: $e');
       return {
         'success': false,
         'message': 'Connection error: ${e.toString()}',

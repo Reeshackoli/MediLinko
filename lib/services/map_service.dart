@@ -25,8 +25,6 @@ class MapService {
       final uri = Uri.parse('${ApiConfig.baseUrl}/users/doctors/nearby')
           .replace(queryParameters: queryParams);
 
-      print('🗺️ Fetching nearby doctors: $uri');
-
       final response = await http
           .get(
             uri,
@@ -43,8 +41,6 @@ class MapService {
             .map((json) => DoctorLocationModel.fromJson(json))
             .toList();
 
-        print('✅ Found ${doctors.length} nearby doctors');
-
         return {
           'success': true,
           'doctors': doctors,
@@ -58,7 +54,6 @@ class MapService {
         };
       }
     } catch (e) {
-      print('❌ Error fetching nearby doctors: $e');
       return {
         'success': false,
         'message': 'Connection error: ${e.toString()}',
@@ -83,8 +78,6 @@ class MapService {
 
       final uri = Uri.parse('${ApiConfig.baseUrl}/users/doctors')
           .replace(queryParameters: queryParams);
-      
-      print('🏥 Fetching ALL doctors from: $uri');
 
       final response = await http
           .get(
@@ -92,28 +85,16 @@ class MapService {
             headers: {'Content-Type': 'application/json'},
           )
           .timeout(ApiConfig.connectTimeout);
-
-      print('📥 Response status: ${response.statusCode}');
       
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      print('📦 Response data: success=${responseData['success']}, count=${(responseData['data'] as List?)?.length ?? 0}');
 
       if (response.statusCode == 200 && responseData['success'] == true) {
         final List<dynamic> doctorsJson = responseData['data'] ?? [];
-        print('🔍 Total doctors from API: ${doctorsJson.length}');
         
         final List<DoctorLocationModel> doctors = doctorsJson
-            .where((json) {
-              final hasCoords = json['clinicLatitude'] != null && json['clinicLongitude'] != null;
-              if (!hasCoords) {
-                print('⚠️ Doctor ${json['fullName']} missing coordinates');
-              }
-              return hasCoords;
-            })
+            .where((json) => json['clinicLatitude'] != null && json['clinicLongitude'] != null)
             .map((json) => DoctorLocationModel.fromJson(json))
             .toList();
-        
-        print('✅ Returning ${doctors.length} doctors with valid coordinates');
 
         return {
           'success': true,
@@ -121,7 +102,6 @@ class MapService {
           'count': doctors.length,
         };
       } else {
-        print('❌ API request failed: ${responseData['message']}');
         return {
           'success': false,
           'message': responseData['message'] ?? 'Failed to fetch doctors',
@@ -129,7 +109,6 @@ class MapService {
         };
       }
     } catch (e) {
-      print('❌ Error fetching doctors: $e');
       return {
         'success': false,
         'message': 'Connection error: ${e.toString()}',

@@ -48,11 +48,13 @@ class UserMedicine {
 
 class MedicineDose {
   final String time;
+  final String? instruction;
   final String frequency;
   final List<int>? daysOfWeek;
 
   MedicineDose({
     required this.time,
+    this.instruction,
     this.frequency = 'daily',
     this.daysOfWeek,
   });
@@ -60,6 +62,7 @@ class MedicineDose {
   factory MedicineDose.fromJson(Map<String, dynamic> json) {
     return MedicineDose(
       time: json['time'] ?? '',
+      instruction: json['instruction'],
       frequency: json['frequency'] ?? 'daily',
       daysOfWeek: json['daysOfWeek'] != null 
         ? List<int>.from(json['daysOfWeek'])
@@ -70,6 +73,7 @@ class MedicineDose {
   Map<String, dynamic> toJson() {
     return {
       'time': time,
+      if (instruction != null && instruction!.isNotEmpty) 'instruction': instruction,
       'frequency': frequency,
       if (daysOfWeek != null) 'daysOfWeek': daysOfWeek,
     };

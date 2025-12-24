@@ -33,7 +33,6 @@ import '../../screens/profile/pharmacist_profile_edit_screen.dart';
 import '../../screens/medicine_stock/medicine_list_screen.dart';
 import '../../screens/medicine_stock/add_medicine_screen.dart';
 import '../../screens/medicine_tracker/medicine_tracker_screen_new.dart';
-import '../../screens/medicine_tracker/add_medicine_screen_new.dart';
 import '../../screens/maps/doctors_map_screen.dart';
 import '../../screens/maps/pharmacist_map_screen.dart';
 import '../../screens/appointments/book_appointment_screen.dart';

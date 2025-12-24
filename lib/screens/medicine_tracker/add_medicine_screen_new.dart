@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import '../../core/constants/api_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user_medicine.dart';
 import '../../services/medicine_tracker_service.dart';
+import '../../services/token_service.dart';
 
 class AddMedicineScreenNew extends StatefulWidget {
   final String? medicineId;
@@ -77,17 +80,34 @@ class _AddMedicineScreenNewState extends State<AddMedicineScreenNew>
       _endDate = DateTime.parse(data['endDate']);
     }
     
-    // Parse dose times
+    // Parse dose times (handle 12-hour format like "11:56 PM")
     if (data['doses'] != null && data['doses'] is List) {
       for (var dose in data['doses']) {
         final timeStr = dose['time'] ?? '';
         if (timeStr.isNotEmpty) {
-          final parts = timeStr.split(':');
-          if (parts.length == 2) {
-            _doseTimes.add(TimeOfDay(
-              hour: int.parse(parts[0]),
-              minute: int.parse(parts[1]),
-            ));
+          try {
+            final parts = timeStr.trim().split(' ');
+            if (parts.isNotEmpty) {
+              final timeParts = parts[0].split(':');
+              if (timeParts.length == 2) {
+                int hour = int.parse(timeParts[0]);
+                final minute = int.parse(timeParts[1]);
+                
+                // Convert to 24-hour format if AM/PM is present
+                if (parts.length > 1) {
+                  final period = parts[1].toUpperCase();
+                  if (period == 'PM' && hour != 12) {
+                    hour += 12;
+                  } else if (period == 'AM' && hour == 12) {
+                    hour = 0;
+                  }
+                }
+                
+                _doseTimes.add(TimeOfDay(hour: hour, minute: minute));
+              }
+            }
+          } catch (e) {
+            debugPrint('Error parsing time: $timeStr - $e');
           }
         }
       }
@@ -177,6 +197,86 @@ class _AddMedicineScreenNewState extends State<AddMedicineScreenNew>
 
   void _removeDoseTime(int index) {
     setState(() => _doseTimes.removeAt(index));
+  }
+
+  Future<void> _deleteMedicine() async {
+    if (!_isEditMode || widget.medicineId == null) return;
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Medicine'),
+        content: const Text('Are you sure you want to delete this medicine? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await TokenService().getToken();
+      if (token == null) throw Exception('Not authenticated');
+
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/user-medicines/${widget.medicineId}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Text('Medicine deleted successfully!'),
+                ],
+              ),
+              backgroundColor: AppTheme.successColor,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        throw Exception('Failed to delete medicine');
+      }
+    } catch (e) {
+      debugPrint('❌ Delete medicine error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   String _formatTimeOfDay(TimeOfDay time) {
@@ -437,6 +537,20 @@ class _AddMedicineScreenNewState extends State<AddMedicineScreenNew>
                 ),
               ),
               const Spacer(),
+              if (_isEditMode) ...[
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.white),
+                    onPressed: _deleteMedicine,
+                    tooltip: 'Delete Medicine',
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -445,10 +559,11 @@ class _AddMedicineScreenNewState extends State<AddMedicineScreenNew>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.add_circle_outline, color: Colors.white, size: 18),
+                    Icon(_isEditMode ? Icons.edit_outlined : Icons.add_circle_outline, 
+                      color: Colors.white, size: 18),
                     const SizedBox(width: 8),
                     Text(
-                      'New Medicine',
+                      _isEditMode ? 'Edit Mode' : 'New Medicine',
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 14,

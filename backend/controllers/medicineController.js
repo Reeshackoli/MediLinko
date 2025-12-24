@@ -49,6 +49,7 @@ exports.addMedicine = async (req, res) => {
       const doseDocs = doses.map(d => ({
         userMedicineId: userMedicine._id,
         time: d.time,
+        instruction: d.instruction || '',
         frequency: d.frequency || 'daily',
         daysOfWeek: Array.isArray(d.daysOfWeek) ? d.daysOfWeek : []
       }));
@@ -110,11 +111,44 @@ exports.getCalendar = async (req, res) => {
           if (include) {
             const key = toDateKey(dateObj);
             calendar[key] = calendar[key] || [];
+            
+            // Check if this dose was taken on this date
+            const isTaken = med.takenHistory && med.takenHistory.some(h => {
+              if (h.date !== key) return false;
+              // Normalize both times to compare (handle both 12-hour and 24-hour formats)
+              const doseTime = d.time.trim();
+              const historyTime = h.time.trim();
+              
+              // Simple comparison first
+              if (doseTime === historyTime) return true;
+              
+              // Try converting both to 24-hour format for comparison
+              const normalize = (time) => {
+                // If already 24-hour format (no AM/PM)
+                if (!time.includes('AM') && !time.includes('PM')) {
+                  const parts = time.split(':');
+                  return parts.length === 2 ? `${parts[0].padStart(2, '0')}:${parts[1]}` : time;
+                }
+                // Convert 12-hour to 24-hour
+                const match = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (!match) return time;
+                let hour = parseInt(match[1]);
+                const minute = match[2];
+                const period = match[3].toUpperCase();
+                if (period === 'PM' && hour !== 12) hour += 12;
+                if (period === 'AM' && hour === 12) hour = 0;
+                return `${hour.toString().padStart(2, '0')}:${minute}`;
+              };
+              
+              return normalize(doseTime) === normalize(historyTime);
+            });
+            
             calendar[key].push({
               medicineId: med._id,
               medicineName: med.medicineName,
               dosage: med.dosage,
-              time: d.time
+              time: d.time,
+              isTaken: isTaken || false
             });
           }
         });
@@ -258,6 +292,97 @@ exports.getAllMedicines = async (req, res) => {
     });
 
     return res.status(200).json({ success: true, data: medicinesWithDoses });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/user-medicines/:id - Get single medicine details
+exports.getMedicine = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const medicineId = req.params.id;
+    
+    const medicine = await UserMedicine.findOne({ _id: medicineId, userId });
+    if (!medicine) {
+      return res.status(404).json({ success: false, message: 'Medicine not found' });
+    }
+    
+    // Get doses for this medicine
+    const doses = await MedicineDose.find({ userMedicineId: medicineId });
+    
+    const medicineWithDoses = {
+      ...medicine.toObject(),
+      doses: doses
+    };
+    
+    return res.status(200).json({ success: true, data: medicineWithDoses });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/user-medicines/:id/mark-taken
+exports.markAsTaken = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const medicineId = req.params.id;
+    const { date, time } = req.body;
+
+    if (!date || !time) {
+      return res.status(400).json({ success: false, message: 'date and time are required' });
+    }
+
+    const medicine = await UserMedicine.findOne({ _id: medicineId, userId });
+    if (!medicine) {
+      return res.status(404).json({ success: false, message: 'Medicine not found' });
+    }
+
+    // Check if already marked
+    const alreadyTaken = medicine.takenHistory.some(h => h.date === date && h.time === time);
+    if (alreadyTaken) {
+      return res.status(200).json({ success: true, message: 'Already marked as taken' });
+    }
+
+    // Add to history
+    medicine.takenHistory.push({
+      date,
+      time,
+      takenAt: new Date()
+    });
+
+    await medicine.save();
+
+    return res.status(200).json({ success: true, message: 'Marked as taken', data: medicine });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// DELETE /api/user-medicines/:id/unmark-taken
+exports.unmarkAsTaken = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const medicineId = req.params.id;
+    const { date, time } = req.body;
+
+    if (!date || !time) {
+      return res.status(400).json({ success: false, message: 'date and time are required' });
+    }
+
+    const medicine = await UserMedicine.findOne({ _id: medicineId, userId });
+    if (!medicine) {
+      return res.status(404).json({ success: false, message: 'Medicine not found' });
+    }
+
+    // Remove from history
+    medicine.takenHistory = medicine.takenHistory.filter(h => 
+      !(h.date === date && h.time === time)
+    );
+
+    await medicine.save();
+
+    return res.status(200).json({ success: true, message: 'Unmarked', data: medicine });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

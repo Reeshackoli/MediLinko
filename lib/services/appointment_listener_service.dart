@@ -1,15 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../core/constants/api_config.dart';
-import '../services/token_service.dart';
-import '../services/notification_service.dart';
 
 class AppointmentListenerService {
   static Timer? _appointmentTimer;
   static final Set<String> _notifiedAppointments = {}; // Track notified appointment IDs
-  static bool _isListening = false;
+  static final bool _isListening = false;
 
   // Start listening for appointment changes
   // DISABLED: Backend now sends real-time FCM notifications immediately when:

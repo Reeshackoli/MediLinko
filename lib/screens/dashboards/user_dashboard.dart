@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/health_profile_provider.dart';
+import '../../providers/medicine_reminder_provider.dart';
 import '../../services/fall_detection_service.dart';
 import '../../services/appointment_listener_service.dart';
 import '../../widgets/fall_detection_alert.dart';
-import '../../widgets/todays_reminders_card.dart';
+import '../../widgets/unified_reminders_card.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
@@ -17,7 +18,7 @@ class UserDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _heroController;
   late AnimationController _cardController;
   late Animation<double> _heroAnimation;
@@ -27,9 +28,18 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeFallDetection();
     _initializeAppointmentListener();
     _setupAnimations();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Refresh medicine reminders when app comes back to foreground
+    if (state == AppLifecycleState.resumed) {
+      ref.read(medicineReminderProvider.notifier).loadReminders();
+    }
   }
 
   void _initializeAppointmentListener() {
@@ -101,6 +111,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     AppointmentListenerService.stopListening();
     _heroController.dispose();
     _cardController.dispose();
@@ -232,7 +243,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       begin: const Offset(0, 0.3),
                       end: Offset.zero,
                     ).animate(_cardAnimation),
-                    child: const TodaysRemindersCard(),
+                    child: const UnifiedRemindersCard(),
                   ),
                 ),
                 
@@ -271,7 +282,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       'Medicine\nTracker',
                       AppTheme.successColor,
                       const Color(0xFFD1FAE5),
-                      () => context.push('/medicine-tracker'),
+                      () async {
+                        await context.push('/medicine-tracker');
+                        // Refresh dashboard when returning
+                        if (mounted) setState(() {});
+                      },
                     ),
                     _buildAnimatedActionCard(
                       1,

@@ -11,6 +11,10 @@ const medicineDoseSchema = new mongoose.Schema({
     required: [true, 'Dose time is required'],
     trim: true, // e.g. "09:00 AM"
   },
+  instruction: {
+    type: String,
+    trim: true, // e.g. "After food", "Before food", "With water"
+  },
   frequency: {
     type: String,
     enum: ['daily', 'weekly'],

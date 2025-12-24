@@ -6,7 +6,6 @@ import '../../providers/map_provider.dart';
 import '../../widgets/map/doctor_info_card.dart';
 import '../../widgets/map/map_search_bar.dart';
 import '../../widgets/map/specialty_filter_chips.dart';
-import '../../core/theme/app_theme.dart';
 import 'doctors_list_view.dart';
 
 class DoctorsMapScreen extends ConsumerStatefulWidget {
