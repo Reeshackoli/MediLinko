@@ -1,0 +1,489 @@
+# 🔔 Firebase Cloud Messaging (FCM) Setup Guide
+
+This guide will help new developers set up Firebase Cloud Messaging to receive push notifications in the MediLinko app.
+
+## 📋 Prerequisites
+
+- **Google Account** (for Firebase Console access)
+- **Flutter SDK** installed
+- **Node.js** and **npm** installed (for backend)
+- **Firebase CLI** (optional but recommended)
+
+---
+
+## 🚀 Quick Setup Steps
+
+### Step 1: Create Your Own Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click **"Add project"** or **"Create a project"**
+3. Enter project name (e.g., `medilinko-yourname` or create new `medilinko`)
+4. Enable/Disable Google Analytics (optional)
+5. Click **"Create project"**
+
+---
+
+### Step 2: Add Android App to Firebase Project
+
+1. In Firebase Console, click the **Android icon** (⚙️ Settings → Project settings)
+2. Click **"Add app"** → Select **Android**
+3. Fill in the details:
+   - **Android package name**: `com.medilinko.medilinko` (must match `android/app/build.gradle.kts`)
+   - **App nickname**: `MediLinko` (optional)
+   - **Debug signing certificate SHA-1**: (optional for now, needed for Google Sign-In later)
+4. Click **"Register app"**
+5. **Download `google-services.json`** file
+6. **Important**: Place the downloaded file in these locations:
+   ```
+   MediLinko/
+   ├── google-services.json              ← Root (for reference)
+   └── android/app/google-services.json  ← Required location
+   ```
+
+---
+
+### Step 3: Add iOS App to Firebase Project (if testing on iOS)
+
+1. In Firebase Console, click **"Add app"** → Select **iOS**
+2. Fill in the details:
+   - **iOS bundle ID**: `com.medilinko.medilinko` (must match Xcode project)
+   - **App nickname**: `MediLinko` (optional)
+3. Click **"Register app"**
+4. **Download `GoogleService-Info.plist`** file
+5. Place it in: `MediLinko/ios/Runner/GoogleService-Info.plist`
+6. Open Xcode project and drag the file into Runner folder (ensure "Copy items if needed" is checked)
+
+---
+
+### Step 4: Generate Firebase Service Account Key (for Backend)
+
+This is critical for the backend to send push notifications.
+
+1. Go to Firebase Console → **Project Settings** (⚙️ icon)
+2. Click **"Service accounts"** tab
+3. Click **"Generate new private key"** button
+4. Click **"Generate key"** in the confirmation dialog
+5. A JSON file will be downloaded (e.g., `medilinko-firebase-adminsdk-xxxxx.json`)
+6. **Rename** it to `firebase-service-account.json`
+7. **Place** it in: `MediLinko/backend/config/firebase-service-account.json`
+
+**⚠️ SECURITY WARNING**: 
+- This file contains sensitive credentials
+- NEVER commit this file to Git (it's already in `.gitignore`)
+- Keep it secure and private
+
+---
+
+### Step 5: Configure Flutter App with FlutterFire CLI
+
+The easiest way to configure Firebase in Flutter:
+
+#### Install FlutterFire CLI (if not installed)
+```bash
+dart pub global activate flutterfire_cli
+```
+
+#### Configure Firebase for Your Project
+```bash
+# Navigate to project root
+cd c:\Users\SushilSC\MediLinko
+
+# Run FlutterFire configure
+flutterfire configure
+```
+
+#### Follow the prompts:
+1. Select your Firebase project from the list (or create a new one)
+2. Select platforms: **Android, iOS** (use Space to select, Enter to confirm)
+3. It will automatically:
+   - Generate `lib/firebase_options.dart` with your project's credentials
+   - Update `google-services.json` (Android)
+   - Update `GoogleService-Info.plist` (iOS)
+
+**Note**: This will overwrite the existing `firebase_options.dart` with YOUR Firebase project credentials.
+
+---
+
+### Step 6: Set Up Backend Environment Variables
+
+1. Navigate to backend folder:
+   ```bash
+   cd backend
+   ```
+
+2. Create `.env` file (if it doesn't exist):
+   ```bash
+   # Windows PowerShell
+   New-Item -Path .env -ItemType File
+
+   # Or use text editor to create .env file
+   ```
+
+3. Add the following to `.env`:
+   ```env
+   # MongoDB Connection
+   MONGODB_URI=mongodb://localhost:27017/medilinko
+   # or use MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/medilinko
+
+   # JWT Secret (generate a random string)
+   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+
+   # Server Port
+   PORT=5000
+
+   # Firebase Service Account Path (relative to backend folder)
+   FIREBASE_SERVICE_ACCOUNT_PATH=./config/firebase-service-account.json
+
+   # Optional: Node Environment
+   NODE_ENV=development
+   ```
+
+4. **Verify** that `firebase-service-account.json` exists in `backend/config/`
+
+---
+
+### Step 7: Install Dependencies
+
+#### Flutter Dependencies
+```bash
+# From project root
+flutter pub get
+```
+
+#### Backend Dependencies
+```bash
+# From backend folder
+cd backend
+npm install
+```
+
+---
+
+### Step 8: Verify FCM Setup
+
+#### Check Firebase Configuration Files
+
+Ensure these files exist and are correctly placed:
+
+```
+MediLinko/
+├── lib/firebase_options.dart                          ✓ (generated by flutterfire)
+├── google-services.json                               ✓ (Android config)
+├── android/app/google-services.json                   ✓ (Android config)
+├── ios/Runner/GoogleService-Info.plist                ✓ (iOS config)
+└── backend/
+    ├── .env                                           ✓ (environment variables)
+    └── config/firebase-service-account.json           ✓ (backend credentials)
+```
+
+#### Test Backend Firebase Connection
+
+```bash
+cd backend
+node -e "
+const admin = require('firebase-admin');
+const serviceAccount = require('./config/firebase-service-account.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+console.log('✅ Firebase Admin SDK initialized successfully!');
+"
+```
+
+If successful, you should see: `✅ Firebase Admin SDK initialized successfully!`
+
+---
+
+### Step 9: Run the Application
+
+#### Start Backend Server
+```bash
+cd backend
+npm start
+# or with nodemon for auto-restart
+npm run dev
+```
+
+Server should start on `http://localhost:5000`
+
+#### Start Flutter App
+```bash
+# From project root
+flutter run
+```
+
+Or run from VS Code: **Run → Start Debugging (F5)**
+
+---
+
+### Step 10: Test Push Notifications
+
+#### Option A: Test via Firebase Console
+
+1. Go to Firebase Console → **Engage** → **Messaging**
+2. Click **"Create your first campaign"** or **"New campaign"**
+3. Select **"Firebase Notification messages"**
+4. Fill in:
+   - **Notification title**: "Test Notification"
+   - **Notification text**: "Testing FCM setup"
+5. Click **"Next"**
+6. **Target**: Select your app
+7. Click **"Next"** → **"Review"** → **"Publish"**
+8. Open your app and you should receive the notification!
+
+#### Option B: Test via Backend API
+
+1. Register a user in the app (to get FCM token stored)
+2. Use Postman or curl to send a test notification:
+
+```bash
+# Example: Send appointment reminder
+POST http://localhost:5000/api/notifications/send
+Content-Type: application/json
+
+{
+  "userId": "USER_ID_FROM_DATABASE",
+  "title": "Test Notification",
+  "body": "Testing FCM from backend",
+  "data": {
+    "type": "test",
+    "screen": "/dashboard"
+  }
+}
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue 1: "google-services.json not found"
+
+**Solution**: 
+- Ensure `google-services.json` is in `android/app/` folder
+- Run `flutter clean` and `flutter pub get`
+- Rebuild the app
+
+### Issue 2: "Firebase service account not found"
+
+**Solution**:
+- Check that `backend/config/firebase-service-account.json` exists
+- Verify file name is exactly `firebase-service-account.json`
+- Check `.env` file has correct path
+
+### Issue 3: Notifications not received on Android
+
+**Solutions**:
+- Check app has notification permissions enabled
+- Ensure app is not in battery optimization (Settings → Battery)
+- Verify FCM token is saved in database
+- Check backend logs for errors
+- Test with app in foreground and background
+
+### Issue 4: "Default FirebaseApp is not initialized"
+
+**Solution**:
+- Ensure `Firebase.initializeApp()` is called in `main.dart`
+- Check `firebase_options.dart` exists and has correct credentials
+- Run `flutterfire configure` again
+
+### Issue 5: Backend cannot send notifications
+
+**Solutions**:
+- Verify `firebase-service-account.json` is valid
+- Check Firebase project has FCM enabled
+- Ensure service account has correct permissions
+- Check backend logs for Firebase Admin SDK errors
+
+---
+
+## 📱 Platform-Specific Setup
+
+### Android Additional Configuration
+
+#### Enable Cloud Messaging API (if needed)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your Firebase project
+3. Go to **APIs & Services** → **Library**
+4. Search for "Firebase Cloud Messaging API"
+5. Click **"Enable"** if not already enabled
+
+#### Update App Build Configuration
+
+Verify `android/app/build.gradle.kts` has:
+
+```kotlin
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")  // ← Must have this
+}
+```
+
+### iOS Additional Configuration
+
+#### Enable Push Notifications
+
+1. Open Xcode project: `ios/Runner.xcworkspace`
+2. Select **Runner** target
+3. Go to **Signing & Capabilities**
+4. Click **"+ Capability"**
+5. Add **"Push Notifications"**
+6. Add **"Background Modes"** → Enable:
+   - Remote notifications
+   - Background fetch
+
+#### Upload APNs Authentication Key
+
+1. Go to [Apple Developer Portal](https://developer.apple.com/account)
+2. **Certificates, Identifiers & Profiles** → **Keys**
+3. Create a new key with **Apple Push Notifications service (APNs)**
+4. Download the `.p8` key file
+5. In Firebase Console → **Project Settings** → **Cloud Messaging**
+6. Under **Apple app configuration**, upload:
+   - APNs authentication key (.p8 file)
+   - Key ID
+   - Team ID
+
+---
+
+## 🌐 Environment-Specific Setup
+
+### Development Environment
+
+- Use localhost backend: `http://localhost:5000`
+- Use debug Firebase project
+- Enable detailed logging
+
+### Production Environment
+
+- Use production backend URL: `https://your-api.com`
+- Use production Firebase project
+- Disable debug logging
+- Enable error reporting (Crashlytics)
+
+**Update API URL in Flutter:**
+
+```dart
+// lib/core/constants/api_constants.dart
+class ApiConstants {
+  static const String baseUrl = 
+    kReleaseMode 
+      ? 'https://your-production-api.com'
+      : 'http://localhost:5000';
+}
+```
+
+---
+
+## ✅ Verification Checklist
+
+Before running the app, ensure:
+
+- [ ] Firebase project created
+- [ ] Android app added to Firebase
+- [ ] `google-services.json` downloaded and placed in `android/app/`
+- [ ] iOS app added to Firebase (if using iOS)
+- [ ] `GoogleService-Info.plist` downloaded and placed in `ios/Runner/`
+- [ ] Firebase Service Account key downloaded
+- [ ] `firebase-service-account.json` placed in `backend/config/`
+- [ ] FlutterFire CLI installed
+- [ ] Ran `flutterfire configure`
+- [ ] `firebase_options.dart` generated with correct credentials
+- [ ] Backend `.env` file created with all variables
+- [ ] `flutter pub get` executed
+- [ ] `npm install` executed in backend folder
+- [ ] Backend server starts without errors
+- [ ] Flutter app builds without errors
+- [ ] Test notification received
+
+---
+
+## 📚 Additional Resources
+
+- [Firebase Console](https://console.firebase.google.com/)
+- [FlutterFire Documentation](https://firebase.flutter.dev/)
+- [FCM Documentation](https://firebase.google.com/docs/cloud-messaging)
+- [Firebase Admin SDK (Node.js)](https://firebase.google.com/docs/admin/setup)
+- [Flutter Push Notifications Guide](https://firebase.google.com/docs/cloud-messaging/flutter/client)
+
+---
+
+## 🆘 Getting Help
+
+If you encounter issues:
+
+1. Check the troubleshooting section above
+2. Review Firebase Console logs
+3. Check backend server logs
+4. Verify all files are in correct locations
+5. Ensure all dependencies are installed
+6. Try `flutter clean` and rebuild
+
+---
+
+## 🔒 Security Best Practices
+
+1. **Never commit sensitive files to Git**:
+   - `google-services.json`
+   - `firebase-service-account.json`
+   - `.env` files
+   
+2. **Use environment variables** for sensitive data
+
+3. **Rotate Firebase service account keys** periodically
+
+4. **Use different Firebase projects** for dev/staging/production
+
+5. **Enable Firebase App Check** to prevent abuse
+
+6. **Review Firebase Security Rules** regularly
+
+---
+
+## 📝 Notes
+
+- Each developer needs their own Firebase project OR shared project access
+- If sharing a Firebase project, all developers need:
+  - Access to Firebase Console (added as project member)
+  - Their own copy of `firebase-service-account.json`
+  - Shared `.env` configuration (via secure channel, NOT Git)
+  
+- The `firebase_options.dart` file can be committed to Git if using a shared Firebase project, but it's better to regenerate it for each developer using `flutterfire configure`
+
+---
+
+## 🎯 Quick Setup Commands Summary
+
+```bash
+# 1. Install FlutterFire CLI
+dart pub global activate flutterfire_cli
+
+# 2. Configure Firebase
+flutterfire configure
+
+# 3. Install Flutter dependencies
+flutter pub get
+
+# 4. Setup backend
+cd backend
+npm install
+# Create .env file manually
+
+# 5. Place service account key
+# Download from Firebase Console → Settings → Service Accounts
+# Place in: backend/config/firebase-service-account.json
+
+# 6. Run backend
+npm start
+
+# 7. Run Flutter app (from project root)
+flutter run
+```
+
+---
+
+**Happy Coding! 🚀**
+
+If you have any questions or run into issues, refer to the troubleshooting section or check the official Firebase documentation.

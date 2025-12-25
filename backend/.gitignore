@@ -7,6 +7,9 @@ package-lock.json
 .env.local
 .env.production
 
+# Keep .env.example as template for new developers
+!.env.example
+
 # Logs
 logs/
 *.log

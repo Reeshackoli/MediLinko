@@ -60,3 +60,14 @@ android/app/google-services.json
 *.env
 .env.local
 .env.*.local
+
+# But keep template files
+!backend/.env.example
+!.env.example
+
+# Keep documentation
+!README.md
+!FCM_SETUP_GUIDE.md
+!SETUP_CHECKLIST.md
+!QUICK_START.md
+!MEDICINE_TRACKER_ENHANCEMENT.md
