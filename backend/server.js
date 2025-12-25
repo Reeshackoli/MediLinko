@@ -43,6 +43,7 @@ app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/fcm', require('./routes/fcmRoutes'));
 app.use('/api/ratings', require('./routes/ratingRoutes'));
+app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

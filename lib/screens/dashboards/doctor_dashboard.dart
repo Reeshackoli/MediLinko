@@ -51,7 +51,7 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
     );
 
     _actionControllers = List.generate(
-      3,
+      4,  // Updated to 4 for the prescriptions card
       (index) => AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -275,6 +275,15 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
                   ),
                   _buildAnimatedActionCard(
                     2,
+                    Icons.description_rounded,
+                    'Prescriptions',
+                    'Manage patient prescriptions',
+                    const Color(0xFF10B981),
+                    const Color(0xFFD1FAE5),
+                    () => context.push('/doctor/prescriptions'),
+                  ),
+                  _buildAnimatedActionCard(
+                    3,
                     Icons.person_rounded,
                     'My Profile',
                     'Update your information',

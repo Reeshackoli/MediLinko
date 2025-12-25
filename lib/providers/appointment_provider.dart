@@ -114,6 +114,38 @@ class DoctorAppointmentsNotifier extends StateNotifier<AsyncValue<List<Appointme
     print('❌ Provider: Status update failed');
     return false;
   }
+
+  // Return full response for better error handling
+  Future<Map<String, dynamic>> updateAppointmentStatus({
+    required String appointmentId,
+    required String status,
+    String? reason,
+  }) async {
+    print('📝 Provider: Updating appointment status (with response)');
+    print('   Appointment ID: $appointmentId');
+    print('   Status: $status');
+    print('   Reason: ${reason ?? 'N/A'}');
+    
+    final response = await AppointmentService.updateAppointmentStatus(
+      appointmentId: appointmentId,
+      status: status,
+      reason: reason,
+    );
+
+    print('📥 Provider: Response received');
+    print('   Success: ${response['success']}');
+    print('   Message: ${response['message']}');
+
+    if (response['success'] == true) {
+      print('✅ Provider: Status update successful, reloading appointments');
+      // Reload appointments and wait for completion
+      await loadAppointments();
+    } else {
+      print('❌ Provider: Status update failed');
+    }
+
+    return response;
+  }
 }
 
 // Available slots provider - simple caching solution

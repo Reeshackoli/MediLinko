@@ -77,7 +77,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
 
     // Staggered animations for action cards
     _actionControllers = List.generate(
-      4,
+      5,  // Updated to 5 for the new prescriptions card
       (index) => AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -274,7 +274,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.05,
                     children: [
                     _buildAnimatedActionCard(
                       0,
@@ -311,6 +311,14 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       AppTheme.warningColor,
                       const Color(0xFFFEF3C7),
                       () => context.push('/appointments'),
+                    ),
+                    _buildAnimatedActionCard(
+                      4,
+                      Icons.description_rounded,
+                      'My\nPrescriptions',
+                      AppTheme.accentPurple,
+                      const Color(0xFFE9D5FF),
+                      () => context.push('/user/prescriptions'),
                     ),
                   ],
                 ),

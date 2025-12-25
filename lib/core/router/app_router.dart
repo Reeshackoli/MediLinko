@@ -41,6 +41,13 @@ import '../../screens/appointments/doctor_appointments_screen.dart';
 import '../../screens/patients/patient_management_screen.dart';
 import '../../screens/patients/patient_profile_view_screen.dart';
 
+// --- Prescriptions ---
+import '../../screens/prescriptions/doctor_prescriptions_screen.dart';
+import '../../screens/prescriptions/create_prescription_screen.dart';
+import '../../screens/prescriptions/user_prescriptions_screen.dart';
+import '../../screens/prescriptions/prescription_details_screen.dart';
+import '../../models/prescription_model.dart' show PrescriptionModel;
+
 // --- Emergency ---
 import '../../screens/emergency/emergency_screen.dart';
 
@@ -51,7 +58,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/settings/server_settings_screen.dart';
 
 // --- Models ---
-import '../../models/appointment_model.dart';
+import '../../models/appointment_model.dart' show AppointmentModel, DoctorInfo, PatientInfo, DoctorProfile, PatientProfile;
 import '../../models/doctor_location_model.dart';
 
 // --- Main for navigator key ---
@@ -227,6 +234,33 @@ final GoRouter router = GoRouter(
           patientId: patientId,
           patientName: patientName,
         );
+      },
+    ),
+    
+    // ------------------- Prescription Routes -------------------
+    // Doctor prescription routes
+    GoRoute(
+      path: '/doctor/prescriptions',
+      builder: (context, state) => const DoctorPrescriptionsScreen(),
+    ),
+    GoRoute(
+      path: '/doctor/prescriptions/create',
+      builder: (context, state) {
+        final patient = state.extra as PatientInfo;
+        return CreatePrescriptionScreen(patient: patient);
+      },
+    ),
+    
+    // User prescription routes
+    GoRoute(
+      path: '/user/prescriptions',
+      builder: (context, state) => const UserPrescriptionsScreen(),
+    ),
+    GoRoute(
+      path: '/user/prescriptions/:doctorId',
+      builder: (context, state) {
+        final doctor = state.extra as DoctorInfo;
+        return PrescriptionDetailsScreen(doctor: doctor);
       },
     ),
   ],

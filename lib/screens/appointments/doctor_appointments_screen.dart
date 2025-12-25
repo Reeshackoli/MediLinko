@@ -13,7 +13,7 @@ class DoctorAppointmentsScreen extends ConsumerStatefulWidget {
 
 class _DoctorAppointmentsScreenState
     extends ConsumerState<DoctorAppointmentsScreen> {
-  String _selectedFilter = 'pending';
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -986,26 +986,6 @@ class _DoctorAppointmentCard extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ],
-            if (appointment.status == 'approved') ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onComplete,
-                  icon: const Icon(Icons.check_circle, size: 20),
-                  label: const Text('Mark as Completed'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C9AFF),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
               ),
             ],
             if (appointment.status == 'completed') ...[
