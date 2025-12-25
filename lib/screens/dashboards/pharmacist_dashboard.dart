@@ -335,10 +335,23 @@ class _PharmacistDashboardScreenState extends ConsumerState<PharmacistDashboardS
                 String? services;
                 
                 if (profile is Map<String, dynamic>) {
-                  address = profile['address'] as String?;
-                  phone = profile['phone'] as String?;
-                  services = profile['services'] as String?;
+                  // Extract storeAddress (it's an object with fullAddress field)
+                  final storeAddress = profile['storeAddress'] as Map<String, dynamic>?;
+                  address = storeAddress?['fullAddress'] as String?;
+                  
+                  // Extract phone from User data (sent alongside profile)
+                  // Note: The provider returns profile only, need to check ref.watch(currentUserProvider)
+                  
+                  // Extract servicesOffered (it's an array)
+                  final servicesOffered = profile['servicesOffered'] as List<dynamic>?;
+                  if (servicesOffered != null && servicesOffered.isNotEmpty) {
+                    services = servicesOffered.join(', ');
+                  }
                 }
+                
+                // Get phone from current user
+                final user = ref.watch(currentUserProvider);
+                phone = user?.phone;
                 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
