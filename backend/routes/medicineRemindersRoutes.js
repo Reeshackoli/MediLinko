@@ -4,6 +4,7 @@ const { protect } = require('../middleware/auth');
 const User = require('../models/User');
 const UserMedicine = require('../models/UserMedicine');
 const MedicineDose = require('../models/MedicineDose');
+const { rescheduleUserReminders } = require('../services/medicineReminderScheduler');
 
 // Helper function to normalize time to consistent format
 function normalizeTime(time) {
@@ -71,6 +72,9 @@ router.post('/', protect, async (req, res) => {
     }
 
     console.log(`✅ Medicine added: ${medicineName} for user ${req.user.email}`);
+
+    // Reschedule reminders for this user
+    rescheduleUserReminders(req.user._id);
 
     res.status(201).json({
       success: true,
@@ -144,9 +148,18 @@ router.get('/by-date', protect, async (req, res) => {
       });
     }
 
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+
     const medicines = await UserMedicine.find({
       userId: req.user._id,
       isActive: true,
+      $or: [
+        { startDate: { $lte: targetDate }, endDate: { $gte: targetDate } }, // Within range
+        { startDate: { $lte: targetDate }, endDate: null }, // No end date
+        { startDate: null, endDate: { $gte: targetDate } }, // No start date
+        { startDate: null, endDate: null }, // No date restrictions
+      ],
     }).sort({ createdAt: -1 });
 
     // Get doses for each medicine
@@ -414,6 +427,9 @@ router.delete('/:id', protect, async (req, res) => {
 
     console.log(`🗑️ Medicine ${medicine.medicineName} deleted`);
 
+    // Reschedule reminders for this user (removes deleted medicine's jobs)
+    rescheduleUserReminders(req.user._id);
+
     res.json({
       success: true,
       message: 'Medicine reminder deleted successfully',
@@ -473,6 +489,9 @@ router.put('/:id', protect, async (req, res) => {
     }
 
     console.log(`✏️ Medicine ${medicine.medicineName} updated`);
+
+    // Reschedule reminders for this user
+    rescheduleUserReminders(req.user._id);
 
     res.json({
       success: true,

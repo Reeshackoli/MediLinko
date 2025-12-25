@@ -1,5 +1,6 @@
 const UserMedicine = require('../models/UserMedicine');
 const MedicineDose = require('../models/MedicineDose');
+const { scheduleMedicineReminders, clearMedicineReminders } = require('../services/medicineReminderScheduler');
 
 // Helper: parse date string to YYYY-MM-DD (local time)
 function toDateKey(date) {
@@ -55,6 +56,14 @@ exports.addMedicine = async (req, res) => {
       }));
       await MedicineDose.insertMany(doseDocs);
     }
+
+    // Populate doses for scheduling
+    const medicineWithDoses = await UserMedicine.findById(userMedicine._id).lean();
+    const dosesForMedicine = await MedicineDose.find({ userMedicineId: userMedicine._id }).lean();
+    medicineWithDoses.doses = dosesForMedicine;
+
+    // Schedule push notifications for this medicine
+    scheduleMedicineReminders(medicineWithDoses);
 
     return res.status(201).json({ success: true, message: 'Medicine added', data: userMedicine });
   } catch (error) {
@@ -248,6 +257,13 @@ exports.updateMedicine = async (req, res) => {
       if (doseDocs.length) await MedicineDose.insertMany(doseDocs);
     }
 
+    // Reschedule reminders for updated medicine
+    clearMedicineReminders(med._id);
+    const medicineWithDoses = await UserMedicine.findById(med._id).lean();
+    const dosesForMedicine = await MedicineDose.find({ userMedicineId: med._id }).lean();
+    medicineWithDoses.doses = dosesForMedicine;
+    scheduleMedicineReminders(medicineWithDoses);
+
     return res.status(200).json({ success: true, message: 'Medicine updated', data: med });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -265,6 +281,9 @@ exports.deleteMedicine = async (req, res) => {
 
     med.isActive = false;
     await med.save();
+
+    // Clear all reminders for this medicine
+    clearMedicineReminders(id);
 
     return res.status(200).json({ success: true, message: 'Medicine soft-deleted' });
   } catch (error) {

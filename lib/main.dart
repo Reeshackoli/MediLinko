@@ -70,7 +70,7 @@ Future<void> _createNotificationChannels() async {
   
   // Medicine channel (High importance, sound enabled)
   const AndroidNotificationChannel medicineChannel = AndroidNotificationChannel(
-    'medicine_channel',
+    'medicine_reminders',
     'Medicine Reminders',
     description: 'Daily medicine reminder notifications',
     importance: Importance.high,
@@ -104,6 +104,8 @@ Future<void> _createNotificationChannels() async {
 void _handleNotificationTap(String? payload) {
   debugPrint('🔔 Notification tapped with payload: $payload');
   
+  if (payload == null) return;
+  
   if (payload == 'EMERGENCY_MODE') {
     // Force navigate to emergency screen
     Future.delayed(const Duration(milliseconds: 500), () {
@@ -111,6 +113,16 @@ void _handleNotificationTap(String? payload) {
         '/emergency',
         (route) => false,
       );
+    });
+  } else if (payload == 'medicine_reminder' || payload.contains('medicine_reminder')) {
+    // Navigate to medicine tracker
+    Future.delayed(const Duration(milliseconds: 500), () {
+      navigatorKey.currentState?.pushNamed('/medicine-tracker');
+    });
+  } else if (payload.contains('appointment')) {
+    // Navigate to appointments
+    Future.delayed(const Duration(milliseconds: 500), () {
+      navigatorKey.currentState?.pushNamed('/appointments');
     });
   }
 }

@@ -157,79 +157,114 @@ class _DoctorsMapScreenState extends ConsumerState<DoctorsMapScreen> {
         : const LatLng(15.8497, 74.4977);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isListView ? 'Doctors List' : 'Find Doctors'),
-        backgroundColor: const Color(0xFF4C9AFF),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          // View toggle button - Prominent
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: Material(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  setState(() {
-                    _isListView = !_isListView;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF4C9AFF).withOpacity(0.05),
+              const Color(0xFF5FD4C4).withOpacity(0.05),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Premium Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 48, 16, 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4C9AFF),
+                    Color(0xFF5FD4C4),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4C9AFF).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(
-                        _isListView ? Icons.map_outlined : Icons.list_rounded,
-                        color: Colors.white,
-                        size: 20,
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isListView ? 'Map' : 'List',
-                        style: const TextStyle(
+                      const Spacer(),
+                      // Doctor count badge
+                      if (mapState.filteredDoctors.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.medical_services, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${mapState.filteredDoctors.length} Doctors',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      // View toggle
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isListView = !_isListView;
+                          });
+                        },
+                        icon: Icon(
+                          _isListView ? Icons.map_outlined : Icons.list_rounded,
                           color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-          ),
-          if (mapState.filteredDoctors.isNotEmpty)
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.medical_services, size: 16, color: Colors.white),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${mapState.filteredDoctors.length}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _isListView ? 'Doctors List' : 'Find Doctors',
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.2,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Find nearby doctors and specialists',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
+            Expanded(
+              child: _isListView ? _buildListView() : _buildMapView(context, mapState, currentLocation, initialCenter),
+            ),
+          ],
+        ),
       ),
-      body: _isListView ? _buildListView() : _buildMapView(context, mapState, currentLocation, initialCenter),
     );
   }
 

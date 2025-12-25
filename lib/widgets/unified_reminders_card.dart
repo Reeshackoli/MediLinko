@@ -309,28 +309,6 @@ class _UnifiedRemindersCardState extends ConsumerState<UnifiedRemindersCard> wit
                     );
                   },
                 ),
-
-                // View Tracker Button
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.open_in_new, size: 18),
-                      label: const Text('Open Medicine Tracker'),
-                      onPressed: () async {
-                        await context.push('/medicine-tracker');
-                        _loadData();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
         ],

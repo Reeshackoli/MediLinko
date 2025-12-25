@@ -180,50 +180,97 @@ class _PharmaciesMapScreenState extends ConsumerState<PharmaciesMapScreen> {
     print('🗺️ Map center: ${initialCenter.latitude}, ${initialCenter.longitude}');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Find Pharmacies Near You'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1A1A),
-        elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.1),
-        actions: [
-          if (mapState.filteredPharmacies.isNotEmpty)
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4C9AFF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF4C9AFF).withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.local_pharmacy,
-                      size: 16,
-                      color: Color(0xFF4C9AFF),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${mapState.filteredPharmacies.length}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF4C9AFF),
-                      ),
-                    ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF5FD4C4).withOpacity(0.05),
+              const Color(0xFF4C9AFF).withOpacity(0.05),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Premium Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF5FD4C4),
+                    Color(0xFF4C9AFF),
                   ],
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF5FD4C4).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const Spacer(),
+                      // Pharmacy count badge
+                      if (mapState.filteredPharmacies.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.local_pharmacy, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${mapState.filteredPharmacies.length} Pharmacies',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Find Pharmacies',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Find nearby pharmacies and medicines',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
-      body: Stack(
+            Expanded(
+              child: Stack(
         children: [
           // Map
           FlutterMap(
@@ -527,6 +574,10 @@ class _PharmaciesMapScreenState extends ConsumerState<PharmaciesMapScreen> {
               ),
             ),
         ],
+      ),
+            ),
+          ],
+        ),
       ),
     );
   }

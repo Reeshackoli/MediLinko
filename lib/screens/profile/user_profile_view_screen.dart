@@ -16,6 +16,11 @@ class UserProfileViewScreen extends ConsumerWidget {
         title: const Text('My Profile'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(healthProfileProvider),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => context.push('/user-dashboard/profile/edit'),
             tooltip: 'Edit Profile',
@@ -42,20 +47,18 @@ class UserProfileViewScreen extends ConsumerWidget {
           final currentMedications = (profile['currentMedications'] as List?)?.cast<String>() ?? [];
           
           // Handle both old nested and new flat emergency contact structure
-          String emergencyContactName = '';
-          String emergencyContactRelationship = '';
-          String emergencyContactPhone = '';
+          // Prioritize flat structure over nested structure
+          String emergencyContactName = profile['emergencyContactName'] as String? ?? '';
+          String emergencyContactRelationship = profile['emergencyContactRelationship'] as String? ?? '';
+          String emergencyContactPhone = profile['emergencyContactPhone'] as String? ?? '';
           
-          if (profile.containsKey('emergencyContact') && profile['emergencyContact'] is Map) {
-            // Old nested structure
+          // Fall back to old nested structure if flat fields are empty
+          if (emergencyContactName.isEmpty && 
+              profile.containsKey('emergencyContact') && 
+              profile['emergencyContact'] is Map) {
             final ec = profile['emergencyContact'] as Map<String, dynamic>;
             emergencyContactName = ec['name'] as String? ?? '';
             emergencyContactPhone = ec['phone'] as String? ?? '';
-          } else {
-            // New flat structure
-            emergencyContactName = profile['emergencyContactName'] as String? ?? '';
-            emergencyContactRelationship = profile['emergencyContactRelationship'] as String? ?? '';
-            emergencyContactPhone = profile['emergencyContactPhone'] as String? ?? '';
           }
 
           return SingleChildScrollView(

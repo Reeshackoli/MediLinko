@@ -69,18 +69,19 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
         _currentMedications = (profile['currentMedications'] as List?)?.cast<String>() ?? [];
         
         // Handle both old nested and new flat emergency contact structure
-        if (profile.containsKey('emergencyContact') && profile['emergencyContact'] is Map) {
-          // Old nested structure
+        // Prioritize flat structure over nested structure
+        _emergencyNameController.text = profile['emergencyContactName'] as String? ?? '';
+        _emergencyRelationshipController.text =
+            profile['emergencyContactRelationship'] as String? ?? '';
+        _emergencyPhoneController.text = profile['emergencyContactPhone'] as String? ?? '';
+        
+        // Fall back to old nested structure if flat fields are empty
+        if (_emergencyNameController.text.isEmpty &&
+            profile.containsKey('emergencyContact') && 
+            profile['emergencyContact'] is Map) {
           final ec = profile['emergencyContact'] as Map<String, dynamic>;
           _emergencyNameController.text = ec['name'] as String? ?? '';
           _emergencyPhoneController.text = ec['phone'] as String? ?? '';
-          _emergencyRelationshipController.text = '';
-        } else {
-          // New flat structure
-          _emergencyNameController.text = profile['emergencyContactName'] as String? ?? '';
-          _emergencyRelationshipController.text =
-              profile['emergencyContactRelationship'] as String? ?? '';
-          _emergencyPhoneController.text = profile['emergencyContactPhone'] as String? ?? '';
         }
       });
     }
@@ -126,14 +127,19 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
       debugPrint('📤 Updating profile with: $profileData');
       final response = await ProfileService.updateProfile(profileData);
       debugPrint('📥 Update response: $response');
+      debugPrint('📥 Success field: ${response['success']}');
+      debugPrint('📥 Success is true?: ${response['success'] == true}');
       
       if (response['success'] == true) {
+        debugPrint('✅ Inside success block - invalidating provider');
         // Refresh profile data
         ref.invalidate(healthProfileProvider);
         
+        debugPrint('✅ Refreshing auth user');
         // Also refresh auth state if user data changed
         await ref.read(authProvider.notifier).refreshUser();
 
+        debugPrint('✅ Showing success message and popping');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -145,6 +151,7 @@ class _UserProfileEditScreenState extends ConsumerState<UserProfileEditScreen> {
           context.pop();
         }
       } else {
+        debugPrint('❌ Success was not true');
         throw Exception(response['message'] ?? 'Failed to update profile');
       }
     } catch (e) {

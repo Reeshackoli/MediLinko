@@ -208,9 +208,22 @@ class NotificationService {
 
     if (notification == null) return;
 
+    // Determine channel based on notification type
+    String channelId = 'high_importance_channel';
+    String channelName = 'High Importance Notifications';
+    
+    final notificationType = message.data['type'];
+    if (notificationType == 'medicine_reminder') {
+      channelId = 'medicine_reminders';
+      channelName = 'Medicine Reminders';
+    } else if (notificationType == 'appointment') {
+      channelId = 'appointment_alerts';
+      channelName = 'Appointment Alerts';
+    }
+
     final androidDetails = AndroidNotificationDetails(
-      message.data['channel_id'] ?? 'high_importance_channel',
-      message.data['channel_name'] ?? 'High Importance Notifications',
+      channelId,
+      channelName,
       channelDescription: 'Important notifications from MediLinko',
       importance: Importance.high,
       priority: Priority.high,
@@ -233,14 +246,14 @@ class NotificationService {
       notification.title,
       notification.body,
       details,
-      payload: message.data.toString(),
+      payload: jsonEncode(message.data),
     );
   }
 
   // Create notification channels
   static Future<void> _createNotificationChannels() async {
     const medicineChannel = AndroidNotificationChannel(
-      'medicine_alerts',
+      'medicine_reminders',
       'Medicine Reminders',
       description: 'Notifications for medicine reminders',
       importance: Importance.high,

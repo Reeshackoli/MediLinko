@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/doctor_location_model.dart';
 import '../../providers/map_provider.dart';
+import '../rating_dialog.dart';
 
 class DoctorInfoCard extends ConsumerWidget {
   final DoctorLocationModel doctor;
@@ -155,54 +156,82 @@ class DoctorInfoCard extends ConsumerWidget {
 
                   const SizedBox(height: 20),
 
-                  // Book Appointment button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.push('/book-appointment', extra: doctor);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C9AFF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            'Book Appointment',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                  // Action buttons row
+                  Row(
+                    children: [
+                      // Book Appointment button
+                      Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              context.push('/book-appointment', extra: doctor);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4C9AFF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Book',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Coming soon note
-                  Center(
-                    child: Text(
-                      'Appointment booking will be available soon',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                        fontStyle: FontStyle.italic,
+                      const SizedBox(width: 10),
+                      // Rate button
+                      Expanded(
+                        child: SizedBox(
+                          height: 50,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              showRatingDialog(
+                                context,
+                                targetUserId: doctor.id,
+                                targetName: doctor.fullName,
+                                serviceType: 'consultation',
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.amber, width: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Rate',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

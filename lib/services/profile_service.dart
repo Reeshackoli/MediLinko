@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
 import 'token_service.dart';
@@ -42,6 +43,7 @@ class ProfileService {
       Map<String, dynamic> profileData) async {
     try {
       final token = await _tokenService.getToken();
+      debugPrint('🔑 Token: ${token != null ? "Found" : "NULL"}');
       if (token == null) {
         return {
           'success': false,
@@ -49,6 +51,9 @@ class ProfileService {
         };
       }
 
+      debugPrint('📡 PUT ${ApiConfig.profile}');
+      debugPrint('📦 Body: ${jsonEncode(profileData)}');
+      
       final response = await http
           .put(
             Uri.parse(ApiConfig.profile),
@@ -60,6 +65,9 @@ class ProfileService {
           )
           .timeout(ApiConfig.connectTimeout);
 
+      debugPrint('📬 Status: ${response.statusCode}');
+      debugPrint('📬 Response: ${response.body}');
+      
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       return responseData;
     } catch (e) {

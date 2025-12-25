@@ -9,14 +9,21 @@ const PharmacistProfile = require('../models/PharmacistProfile');
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('📝 Profile update request received');
+    console.log('👤 User ID:', userId);
+    console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
+    
     const user = await User.findById(userId);
 
     if (!user) {
+      console.log('❌ User not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+
+    console.log('✅ User found:', user.email, '| Role:', user.role);
 
     let profile;
     const profileData = req.body;
@@ -33,17 +40,36 @@ exports.updateProfile = async (req, res) => {
 
     // Handle profile based on user role
     if (user.role === 'user') {
+      console.log('💾 Updating HealthProfile...');
+      
+      // Get current profile BEFORE update
+      const currentProfile = await HealthProfile.findOne({ userId });
+      console.log('📋 BEFORE UPDATE:', JSON.stringify({
+        emergencyContactName: currentProfile?.emergencyContactName,
+        emergencyContactRelationship: currentProfile?.emergencyContactRelationship,
+        city: currentProfile?.city
+      }));
+      
       profile = await HealthProfile.findOneAndUpdate(
         { userId },
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      
+      console.log('📋 AFTER UPDATE:', JSON.stringify({
+        emergencyContactName: profile?.emergencyContactName,
+        emergencyContactRelationship: profile?.emergencyContactRelationship,
+        city: profile?.city
+      }));
+      console.log('✅ HealthProfile updated:', profile ? 'Success' : 'Failed');
     } else if (user.role === 'doctor') {
+      console.log('💾 Updating DoctorProfile...');
       profile = await DoctorProfile.findOneAndUpdate(
         { userId },
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      console.log('✅ DoctorProfile updated:', profile ? 'Success' : 'Failed');
       
       if (profileData.availableTimings) {
         // Timings saved
@@ -64,11 +90,13 @@ exports.updateProfile = async (req, res) => {
         }
       }
     } else if (user.role === 'pharmacist') {
+      console.log('💾 Updating PharmacistProfile...');
       profile = await PharmacistProfile.findOneAndUpdate(
         { userId },
         profileData,
         { new: true, upsert: true, runValidators: true }
       );
+      console.log('✅ PharmacistProfile updated:', profile ? 'Success' : 'Failed');
       // If pharmacist provided pharmacy coordinates, update user model location as well
       if (profileData.pharmacyLatitude && profileData.pharmacyLongitude) {
         const lat = parseFloat(profileData.pharmacyLatitude);
@@ -87,12 +115,15 @@ exports.updateProfile = async (req, res) => {
     // Mark user profile as complete
     await User.findByIdAndUpdate(userId, { isProfileComplete: true });
 
+    console.log('✅ Profile update complete - sending response');
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       data: profile
     });
   } catch (error) {
+    console.log('❌ Profile update error:', error.message);
+    console.log('📋 Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: error.message
@@ -106,26 +137,36 @@ exports.updateProfile = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('📖 GET Profile request for user:', userId);
+    
     const user = await User.findById(userId);
 
     if (!user) {
+      console.log('❌ User not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    console.log('✅ User found:', user.email, '| Role:', user.role);
+
     let profile;
 
     // Get profile based on user role
     if (user.role === 'user') {
+      console.log('🔍 Fetching HealthProfile...');
       profile = await HealthProfile.findOne({ userId });
+      console.log('📦 HealthProfile data:', JSON.stringify(profile, null, 2));
     } else if (user.role === 'doctor') {
+      console.log('🔍 Fetching DoctorProfile...');
       profile = await DoctorProfile.findOne({ userId });
     } else if (user.role === 'pharmacist') {
+      console.log('🔍 Fetching PharmacistProfile...');
       profile = await PharmacistProfile.findOne({ userId });
     }
 
+    console.log('📤 Sending response with profile:', profile ? 'Found' : 'NULL');
     res.status(200).json({
       success: true,
       data: {

@@ -41,6 +41,16 @@ const pharmacistProfileSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
+  },
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  totalRatings: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

@@ -8,27 +8,27 @@ const { admin, messaging } = require('../config/firebase');
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    const { read, limit = 7 } = req.query;
+    const { read, limit = 50 } = req.query;
 
     const filter = { userId };
     if (read !== undefined) {
       filter.read = read === 'true';
     }
 
-    // Auto-cleanup: Delete notifications older than 1 day
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    // Auto-cleanup: Delete notifications older than 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     await Notification.deleteMany({
       userId,
-      createdAt: { $lt: oneDayAgo },
+      createdAt: { $lt: sevenDaysAgo },
     });
 
-    // Auto-cleanup: Keep only last 15 notifications
+    // Auto-cleanup: Keep only last 50 notifications
     const totalCount = await Notification.countDocuments({ userId });
-    if (totalCount > 15) {
+    if (totalCount > 50) {
       const notificationsToKeep = await Notification.find({ userId })
         .sort({ createdAt: -1 })
-        .limit(15)
+        .limit(50)
         .select('_id');
       
       const idsToKeep = notificationsToKeep.map(n => n._id);

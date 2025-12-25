@@ -88,66 +88,115 @@ class _AppointmentListScreenState extends ConsumerState<AppointmentListScreen> {
     final appointmentsState = ref.watch(userAppointmentsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('My Appointments'),
-        backgroundColor: const Color(0xFF4C9AFF),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // Filter Chips
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _FilterChip(
-                    label: 'All',
-                    value: 'all',
-                    selectedValue: _selectedFilter,
-                    onSelected: (value) => setState(() => _selectedFilter = value),
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Pending',
-                    value: 'pending',
-                    selectedValue: _selectedFilter,
-                    onSelected: (value) => setState(() => _selectedFilter = value),
-                    color: Colors.orange,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Approved',
-                    value: 'approved',
-                    selectedValue: _selectedFilter,
-                    onSelected: (value) => setState(() => _selectedFilter = value),
-                    color: Colors.green,
-                  ),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF4C9AFF).withOpacity(0.05),
+              const Color(0xFF5FD4C4).withOpacity(0.05),
+            ],
           ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Premium Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF4C9AFF),
+                      Color(0xFF5FD4C4),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4C9AFF).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'My Appointments',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Manage your doctor appointments',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-          // Appointments List
-          Expanded(
-            child: appointmentsState.when(
-              data: (appointments) {
-                final filteredAppointments = _filterAppointments(appointments);
+              // Filter Chips
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _FilterChip(
+                        label: 'All',
+                        value: 'all',
+                        selectedValue: _selectedFilter,
+                        onSelected: (value) => setState(() => _selectedFilter = value),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: 'Pending',
+                        value: 'pending',
+                        selectedValue: _selectedFilter,
+                        onSelected: (value) => setState(() => _selectedFilter = value),
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: 'Approved',
+                        value: 'approved',
+                        selectedValue: _selectedFilter,
+                        onSelected: (value) => setState(() => _selectedFilter = value),
+                        color: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-                if (filteredAppointments.isEmpty) {
+              // Appointments List
+              Expanded(
+                child: appointmentsState.when(
+                  data: (appointments) {
+                    final filteredAppointments = _filterAppointments(appointments);
+
+                    if (filteredAppointments.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -231,7 +280,9 @@ class _AppointmentListScreenState extends ConsumerState<AppointmentListScreen> {
               ),
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
