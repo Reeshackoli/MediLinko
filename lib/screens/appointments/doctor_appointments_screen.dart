@@ -153,25 +153,34 @@ class _DoctorAppointmentsScreenState
         Navigator.pop(context); // Close loading dialog
         
         if (success) {
+          String message;
+          Color backgroundColor;
+          IconData icon;
+          
+          if (status == 'approved') {
+            message = 'Appointment approved successfully. Patient will be notified.';
+            backgroundColor = Colors.green;
+            icon = Icons.check_circle;
+          } else if (status == 'completed') {
+            message = 'Appointment marked as completed. Patient has been notified.';
+            backgroundColor = const Color(0xFF4C9AFF);
+            icon = Icons.check_circle_outline;
+          } else {
+            message = 'Appointment rejected. Patient has been notified.';
+            backgroundColor = Colors.red;
+            icon = Icons.cancel;
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
                 children: [
-                  Icon(
-                    status == 'approved' ? Icons.check_circle : Icons.cancel,
-                    color: Colors.white,
-                  ),
+                  Icon(icon, color: Colors.white),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      status == 'approved' 
-                        ? 'Appointment approved successfully. Patient will be notified.'
-                        : 'Appointment rejected. Patient has been notified.',
-                    ),
-                  ),
+                  Expanded(child: Text(message)),
                 ],
               ),
-              backgroundColor: status == 'approved' ? Colors.green : Colors.red,
+              backgroundColor: backgroundColor,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 4),
             ),
@@ -223,6 +232,148 @@ class _DoctorAppointmentsScreenState
     return appointments.where((a) => a.status == _selectedFilter).toList();
   }
 
+  Widget _buildTodaySection(List<AppointmentModel> todayAppointments) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4C9AFF).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.today, color: Color(0xFF4C9AFF), size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Today\'s Appointments',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4C9AFF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${todayAppointments.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+          ...todayAppointments.take(3).map((appointment) => Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFE9ECEF)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFDEE2E6)),
+                  ),
+                  child: Icon(Icons.person_outline, color: Colors.grey[700], size: 16),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        appointment.patient?.fullName ?? 'Patient',
+                        style: const TextStyle(
+                          color: Color(0xFF2C3E50),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
+                          const SizedBox(width: 3),
+                          Text(
+                            appointment.formattedTime,
+                            style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: appointment.status == 'approved'
+                        ? const Color(0xFFD1FAE5)
+                        : appointment.status == 'completed'
+                            ? const Color(0xFFDBEAFE)
+                            : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: appointment.status == 'approved'
+                          ? const Color(0xFF10B981)
+                          : appointment.status == 'completed'
+                              ? const Color(0xFF4C9AFF)
+                              : const Color(0xFFF59E0B),
+                    ),
+                  ),
+                  child: Text(
+                    appointment.status[0].toUpperCase() + appointment.status.substring(1),
+                    style: TextStyle(
+                      color: appointment.status == 'approved'
+                          ? const Color(0xFF047857)
+                          : appointment.status == 'completed'
+                              ? const Color(0xFF1E40AF)
+                              : const Color(0xFFD97706),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appointmentsState = ref.watch(doctorAppointmentsProvider);
@@ -240,7 +391,7 @@ class _DoctorAppointmentsScreenState
         children: [
           // Stats Section
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFF4C9AFF).withOpacity(0.1),
               border: const Border(
@@ -250,31 +401,22 @@ class _DoctorAppointmentsScreenState
             child: statsAsync.when(
               data: (stats) => Row(
                 children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Today',
-                      value: stats['today']?.toString() ?? '0',
-                      icon: Icons.today,
-                      color: const Color(0xFF4C9AFF),
-                    ),
+                  _CompactStatCard(
+                    label: 'Today',
+                    value: stats['today']?.toString() ?? '0',
+                    color: const Color(0xFF4C9AFF),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Pending',
-                      value: stats['pending']?.toString() ?? '0',
-                      icon: Icons.pending_actions,
-                      color: Colors.orange,
-                    ),
+                  const SizedBox(width: 8),
+                  _CompactStatCard(
+                    label: 'Pending',
+                    value: stats['pending']?.toString() ?? '0',
+                    color: Colors.orange,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Approved',
-                      value: stats['approved']?.toString() ?? '0',
-                      icon: Icons.check_circle,
-                      color: Colors.green,
-                    ),
+                  const SizedBox(width: 8),
+                  _CompactStatCard(
+                    label: 'Approved',
+                    value: stats['approved']?.toString() ?? '0',
+                    color: Colors.green,
                   ),
                 ],
               ),
@@ -298,31 +440,42 @@ class _DoctorAppointmentsScreenState
                 ),
               ],
             ),
-            child: Row(
-              children: [
-                _FilterChip(
-                  label: 'Pending',
-                  value: 'pending',
-                  selectedValue: _selectedFilter,
-                  onSelected: (value) => setState(() => _selectedFilter = value),
-                  color: Colors.orange,
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: 'Approved',
-                  value: 'approved',
-                  selectedValue: _selectedFilter,
-                  onSelected: (value) => setState(() => _selectedFilter = value),
-                  color: Colors.green,
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: 'All',
-                  value: 'all',
-                  selectedValue: _selectedFilter,
-                  onSelected: (value) => setState(() => _selectedFilter = value),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _FilterChip(
+                    label: 'All',
+                    value: 'all',
+                    selectedValue: _selectedFilter,
+                    onSelected: (value) => setState(() => _selectedFilter = value),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Pending',
+                    value: 'pending',
+                    selectedValue: _selectedFilter,
+                    onSelected: (value) => setState(() => _selectedFilter = value),
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Approved',
+                    value: 'approved',
+                    selectedValue: _selectedFilter,
+                    onSelected: (value) => setState(() => _selectedFilter = value),
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Completed',
+                    value: 'completed',
+                    selectedValue: _selectedFilter,
+                    onSelected: (value) => setState(() => _selectedFilter = value),
+                    color: const Color(0xFF4C9AFF),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -337,21 +490,11 @@ class _DoctorAppointmentsScreenState
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.event_available,
-                          size: 80,
-                          color: Colors.grey[300],
-                        ),
+                        Icon(Icons.event_available, size: 80, color: Colors.grey[300]),
                         const SizedBox(height: 16),
                         Text(
-                          _selectedFilter == 'all'
-                              ? 'No appointments yet'
-                              : 'No $_selectedFilter appointments',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
+                          _selectedFilter == 'all' ? 'No appointments yet' : 'No $_selectedFilter appointments',
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -361,23 +504,20 @@ class _DoctorAppointmentsScreenState
                 return RefreshIndicator(
                   onRefresh: _refreshAppointments,
                   color: const Color(0xFF4C9AFF),
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.all(16),
-                    itemCount: filteredAppointments.length,
-                    itemBuilder: (context, index) {
-                      final appointment = filteredAppointments[index];
-                      return _DoctorAppointmentCard(
-                        appointment: appointment,
-                        onApprove: () => _updateAppointmentStatus(
-                          appointment.id,
-                          'approved',
+                    children: [
+                      // All appointments list
+                      ...filteredAppointments.map((appointment) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _DoctorAppointmentCard(
+                          appointment: appointment,
+                          onApprove: () => _updateAppointmentStatus(appointment.id, 'approved'),
+                          onReject: () => _updateAppointmentStatus(appointment.id, 'rejected'),
+                          onComplete: () => _updateAppointmentStatus(appointment.id, 'completed'),
                         ),
-                        onReject: () => _updateAppointmentStatus(
-                          appointment.id,
-                          'rejected',
-                        ),
-                      );
-                    },
+                      )).toList(),
+                    ],
                   ),
                 );
               },
@@ -408,6 +548,53 @@ class _DoctorAppointmentsScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CompactStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _CompactStatCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -509,11 +696,13 @@ class _DoctorAppointmentCard extends StatelessWidget {
   final AppointmentModel appointment;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final VoidCallback onComplete;
 
   const _DoctorAppointmentCard({
     required this.appointment,
     required this.onApprove,
     required this.onReject,
+    required this.onComplete,
   });
 
   Color _getStatusColor(String status) {
@@ -605,18 +794,26 @@ class _DoctorAppointmentCard extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 20, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
                   appointment.formattedDate,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 20),
+                Icon(Icons.access_time, size: 20, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
                   appointment.formattedTime,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -789,6 +986,52 @@ class _DoctorAppointmentCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ],
+            if (appointment.status == 'approved') ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onComplete,
+                  icon: const Icon(Icons.check_circle, size: 20),
+                  label: const Text('Mark as Completed'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C9AFF),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            if (appointment.status == 'completed') ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green[700], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Treatment Completed',
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],

@@ -271,7 +271,7 @@ exports.updateAppointmentStatus = async (req, res) => {
     console.log('   New Status:', status);
     console.log('   Reason:', reason);
 
-    const validStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+    const validStatuses = ['pending', 'approved', 'rejected', 'cancelled', 'completed'];
     if (!validStatuses.includes(status)) {
       console.log('❌ Invalid status:', status);
       return res.status(400).json({
@@ -310,11 +310,11 @@ exports.updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    if (isDoctor && !['approved', 'rejected'].includes(status)) {
-      console.log('❌ Doctor can only approve or reject');
+    if (isDoctor && !['approved', 'rejected', 'completed'].includes(status)) {
+      console.log('❌ Doctor can only approve, reject, or complete');
       return res.status(400).json({
         success: false,
-        message: 'Doctors can only approve or reject',
+        message: 'Doctors can only approve, reject, or complete appointments',
       });
     }
 
@@ -456,6 +456,51 @@ exports.updateAppointmentStatus = async (req, res) => {
       }
     }
 
+    // Create notification for completed appointments
+    if (status === 'completed' && isDoctor) {
+      try {
+        const doctorName = appointment.doctorId.fullName || 'Doctor';
+        await Notification.create({
+          userId: appointment.userId._id,
+          title: 'Appointment Completed',
+          message: `Your appointment with Dr. ${doctorName} on ${appointment.date} at ${appointment.time} has been marked as completed.`,
+          type: 'appointment',
+          relatedId: appointment._id,
+          relatedModel: 'Appointment',
+          data: {
+            appointmentId: appointment._id,
+            doctorName,
+            date: appointment.date,
+            time: appointment.time,
+            status: 'completed',
+          },
+        });
+
+        // Send FCM notification
+        console.log(`📱 Sending completion notification to patient: ${appointment.userId._id}`);
+        const completionResult = await sendNotificationToUser(appointment.userId._id, {
+          title: '✅ Appointment Completed',
+          body: `Your appointment with Dr. ${doctorName} has been completed`,
+          data: {
+            type: 'appointment',
+            status: 'completed',
+            appointmentId: appointment._id.toString(),
+            doctorId: appointment.doctorId._id.toString(),
+            date: appointment.date,
+            time: appointment.time,
+          },
+        });
+
+        if (completionResult.success) {
+          console.log('✅ Completion notification sent to patient successfully');
+        } else {
+          console.error('⚠️ Completion notification failed:', completionResult.message);
+        }
+      } catch (notifError) {
+        console.error('⚠️ Failed to create completion notification:', notifError);
+      }
+    }
+
     res.json({
       success: true,
       message: `Appointment ${status} successfully`,
@@ -572,7 +617,11 @@ exports.getAppointmentStats = async (req, res) => {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date in YYYY-MM-DD format (local timezone)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    console.log('📅 Today\'s date for stats:', today);
     // Stats calculation
 
     const [totalCount, todayCount, pendingCount, approvedCount] = await Promise.all([
@@ -581,6 +630,8 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'pending' }),
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
+    
+    console.log('📊 Today count:', todayCount, 'Date queried:', today);
 
     // Get unique patient count
     const uniquePatients = await Appointment.distinct('userId', { doctorId });

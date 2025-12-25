@@ -104,6 +104,8 @@
         return 'Rejected';
       case 'cancelled':
         return 'Cancelled';
+      case 'completed':
+        return 'Completed';
       default:
         return 'Unknown';
     }

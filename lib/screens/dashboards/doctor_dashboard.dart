@@ -221,6 +221,20 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
                   ),
                 ),
                 
+                const SizedBox(height: 24),
+                
+                // Today's Appointments Section
+                FadeTransition(
+                  opacity: _statsController,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.3),
+                      end: Offset.zero,
+                    ).animate(_statsController),
+                    child: _buildTodayAppointmentsSection(),
+                  ),
+                ),
+                
                 const SizedBox(height: 32),
                 
                 // Section Title
@@ -511,6 +525,231 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTodayAppointmentsSection() {
+    final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
+    
+    return appointmentsAsync.when(
+      data: (appointments) {
+        final now = DateTime.now();
+        final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        
+        print('📅 Today\'s date string: $todayStr');
+        print('📋 Total appointments: ${appointments.length}');
+        
+        final todayAppointments = appointments.where((a) {
+          print('  Appointment date: ${a.date}, status: ${a.status}');
+          return a.date == todayStr && 
+                 a.status != 'rejected' && 
+                 a.status != 'cancelled';
+        }).toList();
+        
+        print('✅ Today\'s appointments found: ${todayAppointments.length}');
+        
+        if (todayAppointments.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4C9AFF).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.today_rounded, color: Color(0xFF4C9AFF), size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Today\'s Appointments',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4C9AFF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${todayAppointments.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 140,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: todayAppointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = todayAppointments[index];
+                  return Container(
+                    width: 280,
+                    margin: EdgeInsets.only(
+                      right: index < todayAppointments.length - 1 ? 12 : 0,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          const Color(0xFF4C9AFF).withOpacity(0.1),
+                          const Color(0xFF5FD4C4).withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF4C9AFF).withOpacity(0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.person_outline,
+                                color: Color(0xFF4C9AFF),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    appointment.patient?.fullName ?? 'Patient',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        appointment.formattedTime,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppTheme.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: appointment.status == 'approved'
+                                ? const Color(0xFFD1FAE5)
+                                : appointment.status == 'completed'
+                                    ? const Color(0xFFDBEAFE)
+                                    : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                appointment.status == 'approved'
+                                    ? Icons.check_circle
+                                    : appointment.status == 'completed'
+                                        ? Icons.task_alt
+                                        : Icons.pending,
+                                size: 14,
+                                color: appointment.status == 'approved'
+                                    ? const Color(0xFF047857)
+                                    : appointment.status == 'completed'
+                                        ? const Color(0xFF1E40AF)
+                                        : const Color(0xFFD97706),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                appointment.status[0].toUpperCase() + appointment.status.substring(1),
+                                style: TextStyle(
+                                  color: appointment.status == 'approved'
+                                      ? const Color(0xFF047857)
+                                      : appointment.status == 'completed'
+                                          ? const Color(0xFF1E40AF)
+                                          : const Color(0xFFD97706),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (appointment.symptoms.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            appointment.symptoms,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

@@ -121,8 +121,9 @@ class _PatientManagementScreenState extends ConsumerState<PatientManagementScree
   List<Map<String, dynamic>> _getTreatedPatients(List<AppointmentModel> appointments) {
     final patientMap = <String, Map<String, dynamic>>{};
     
+    // CRITICAL: Only show completed appointments in history, NOT cancelled
     for (var appointment in appointments) {
-      if (appointment.status == 'completed' || appointment.status == 'cancelled') {
+      if (appointment.status == 'completed') {  // Strict filtering - completed only
         final patient = appointment.patient;
         if (patient != null) {
           final patientId = patient.id;
