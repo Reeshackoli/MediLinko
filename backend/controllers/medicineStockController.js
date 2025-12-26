@@ -328,3 +328,87 @@ exports.getExpiryAlerts = async (req, res) => {
     });
   }
 };
+
+// @desc    Record sale and update quantity
+// @route   POST /api/medicines/:id/sale
+// @access  Private (Pharmacist only)
+exports.recordSale = async (req, res) => {
+  try {
+    console.log(`📦 Record Sale Request - Medicine ID: ${req.params.id}`);
+    console.log(`📦 Request body:`, req.body);
+    
+    const { quantitySold } = req.body;
+
+    if (!quantitySold || quantitySold <= 0) {
+      console.log('❌ Invalid quantity sold');
+      return res.status(400).json({
+        success: false,
+        message: 'Valid quantity sold is required'
+      });
+    }
+
+    let medicine = await MedicineStock.findById(req.params.id);
+
+    if (!medicine) {
+      console.log('❌ Medicine not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Medicine not found'
+      });
+    }
+
+    // Verify ownership
+    if (medicine.pharmacistId.toString() !== req.user.id) {
+      console.log('❌ Unauthorized access');
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this medicine'
+      });
+    }
+
+    // Check if enough quantity available
+    if (quantitySold > medicine.quantity) {
+      console.log(`❌ Insufficient stock: requested ${quantitySold}, available ${medicine.quantity}`);
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient quantity in stock'
+      });
+    }
+
+    // Update quantity
+    const oldQuantity = medicine.quantity;
+    const newQuantity = medicine.quantity - quantitySold;
+    medicine.quantity = newQuantity;
+    await medicine.save();
+
+    console.log(`✅ Sale recorded: ${oldQuantity} → ${newQuantity} (sold: ${quantitySold})`);
+
+    // Check if low stock notification should be sent
+    if (medicine.isLowStock && (!medicine.lastLowStockAlertSent || 
+        new Date() - medicine.lastLowStockAlertSent > 24 * 60 * 60 * 1000)) {
+      // Send low stock notification
+      console.log('📢 Sending low stock alert');
+      const notificationService = require('../services/notificationService');
+      await notificationService.sendLowStockAlert(req.user.id, medicine);
+      
+      medicine.lastLowStockAlertSent = new Date();
+      await medicine.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Sale recorded successfully',
+      data: {
+        medicine,
+        quantitySold,
+        newQuantity
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error recording sale:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

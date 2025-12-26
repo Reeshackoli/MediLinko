@@ -32,9 +32,10 @@ import '../../screens/profile/pharmacist_profile_edit_screen.dart';
 // --- Features ---
 import '../../screens/medicine_stock/medicine_list_screen.dart';
 import '../../screens/medicine_stock/add_medicine_screen.dart';
+import '../../screens/medicine_stock/edit_medicine_screen.dart';
 import '../../screens/medicine_tracker/medicine_tracker_screen_new.dart';
 import '../../screens/maps/doctors_map_screen.dart';
-import '../../screens/maps/pharmacist_map_screen.dart';
+import '../../screens/maps/pharmacies_map_screen.dart';
 import '../../screens/appointments/book_appointment_screen.dart';
 import '../../screens/appointments/appointment_list_screen.dart';
 import '../../screens/appointments/doctor_appointments_screen.dart';
@@ -46,7 +47,6 @@ import '../../screens/prescriptions/doctor_prescriptions_screen.dart';
 import '../../screens/prescriptions/create_prescription_screen.dart';
 import '../../screens/prescriptions/user_prescriptions_screen.dart';
 import '../../screens/prescriptions/prescription_details_screen.dart';
-import '../../models/prescription_model.dart' show PrescriptionModel;
 
 // --- Emergency ---
 import '../../screens/emergency/emergency_screen.dart';
@@ -173,6 +173,13 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/pharmacist/medicines/add',
       builder: (context, state) => const AddMedicineScreen(),
+    ),
+    GoRoute(
+      path: '/pharmacist/medicines/edit/:id',
+      builder: (context, state) {
+        final medicineId = state.pathParameters['id']!;
+        return EditMedicineScreen(medicineId: medicineId);
+      },
     ),
 
     // ------------------- Shared Features -------------------

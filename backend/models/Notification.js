@@ -18,7 +18,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['appointment', 'order', 'general', 'reminder', 'alert', 'medicine_reminder'],
+      enum: ['appointment', 'order', 'general', 'reminder', 'alert', 'medicine_reminder', 'low_stock_alert', 'expiry_alert'],
       default: 'general',
     },
     relatedId: {
@@ -27,7 +27,7 @@ const notificationSchema = new mongoose.Schema(
     },
     relatedModel: {
       type: String,
-      enum: ['Appointment', 'Order', 'Prescription'],
+      enum: ['Appointment', 'Order', 'Prescription', 'MedicineStock'],
     },
     read: {
       type: Boolean,

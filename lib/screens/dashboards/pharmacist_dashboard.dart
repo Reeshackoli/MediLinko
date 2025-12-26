@@ -330,17 +330,39 @@ class _PharmacistDashboardScreenState extends ConsumerState<PharmacistDashboardS
             padding: const EdgeInsets.all(24),
             child: profileAsync.when(
               data: (profile) {
+                print('📦 Pharmacist profile data: $profile');
                 String? address;
                 String? phone;
                 String? services;
                 
                 if (profile is Map<String, dynamic>) {
-                  // Extract storeAddress (it's an object with fullAddress field)
+                  // Extract storeAddress object
                   final storeAddress = profile['storeAddress'] as Map<String, dynamic>?;
-                  address = storeAddress?['fullAddress'] as String?;
+                  print('🏪 Store address object: $storeAddress');
                   
-                  // Extract phone from User data (sent alongside profile)
-                  // Note: The provider returns profile only, need to check ref.watch(currentUserProvider)
+                  // Build address from storeAddress fields (street, city, pincode)
+                  if (storeAddress != null) {
+                    final List<String> addressParts = [];
+                    if (storeAddress['street'] != null && (storeAddress['street'] as String).isNotEmpty) {
+                      addressParts.add(storeAddress['street'] as String);
+                    }
+                    if (storeAddress['city'] != null && (storeAddress['city'] as String).isNotEmpty) {
+                      addressParts.add(storeAddress['city'] as String);
+                    }
+                    if (storeAddress['pincode'] != null && (storeAddress['pincode'] as String).isNotEmpty) {
+                      addressParts.add(storeAddress['pincode'] as String);
+                    }
+                    if (addressParts.isNotEmpty) {
+                      address = addressParts.join(', ');
+                    }
+                    print('📍 Built address from parts: $address');
+                  }
+                  
+                  // Fallback: Try fullAddress field if storeAddress is empty
+                  if (address == null || address.isEmpty) {
+                    address = profile['fullAddress'] as String?;
+                    print('📍 Using flat fullAddress field: $address');
+                  }
                   
                   // Extract servicesOffered (it's an array)
                   final servicesOffered = profile['servicesOffered'] as List<dynamic>?;

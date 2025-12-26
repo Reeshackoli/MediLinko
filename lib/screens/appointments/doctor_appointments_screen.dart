@@ -516,7 +516,7 @@ class _DoctorAppointmentsScreenState
                           onReject: () => _updateAppointmentStatus(appointment.id, 'rejected'),
                           onComplete: () => _updateAppointmentStatus(appointment.id, 'completed'),
                         ),
-                      )).toList(),
+                      )),
                     ],
                   ),
                 );

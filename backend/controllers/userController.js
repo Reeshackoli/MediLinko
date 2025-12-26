@@ -56,9 +56,13 @@ exports.getPharmacies = async (req, res) => {
     const merged = pharmacies.map(p => {
       const obj = p.toObject();
       const prof = profileMap.get(p._id.toString());
-      if (prof && prof.storeName) {
+      if (prof) {
         obj.pharmacyName = obj.pharmacyName || prof.storeName;
         obj.storeName = obj.storeName || prof.storeName;
+        obj.storeAddress = prof.storeAddress;
+        obj.operatingHours = prof.operatingHours;
+        obj.servicesOffered = prof.servicesOffered;
+        obj.deliveryRadius = prof.deliveryRadius;
       }
       return obj;
     });
@@ -126,9 +130,13 @@ exports.getPharmacyById = async (req, res) => {
     const PharmacistProfile = require('../models/PharmacistProfile');
     const prof = await PharmacistProfile.findOne({ userId: pharmacy._id }).lean();
     const result = pharmacy.toObject();
-    if (prof && prof.storeName) {
+    if (prof) {
       result.pharmacyName = result.pharmacyName || prof.storeName;
       result.storeName = result.storeName || prof.storeName;
+      result.storeAddress = prof.storeAddress;
+      result.operatingHours = prof.operatingHours;
+      result.servicesOffered = prof.servicesOffered;
+      result.deliveryRadius = prof.deliveryRadius;
     }
 
     res.status(200).json({

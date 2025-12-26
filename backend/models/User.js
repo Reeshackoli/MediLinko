@@ -69,6 +69,17 @@ const userSchema = new mongoose.Schema({
     min: -180,
     max: 180
   },
+  // Pharmacy location for pharmacists (used in map search)
+  pharmacyLatitude: {
+    type: Number,
+    min: -90,
+    max: 90
+  },
+  pharmacyLongitude: {
+    type: Number,
+    min: -180,
+    max: 180
+  },
   // GeoJSON Point for MongoDB geospatial queries
   location: {
     type: {

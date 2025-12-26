@@ -206,4 +206,45 @@ class MedicineService {
       throw Exception('Error fetching expiring medicines: $e');
     }
   }
+
+  static Future<Map<String, dynamic>> recordSale({
+    required String medicineId,
+    required int quantitySold,
+  }) async {
+    try {
+      final token = await _tokenService.getToken();
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final url = '${ApiConfig.baseUrl}/medicines/$medicineId/sale';
+      print('🔵 POST $url');
+      print('🔵 Body: {"quantitySold": $quantitySold}');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'quantitySold': quantitySold,
+        }),
+      );
+
+      print('🔵 Response status: ${response.statusCode}');
+      print('🔵 Response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to record sale');
+      }
+    } catch (e) {
+      print('❌ Error in recordSale: $e');
+      throw Exception('Error recording sale: $e');
+    }
+  }
 }

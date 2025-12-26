@@ -626,7 +626,7 @@ class _EnhancedTodaysRemindersCardState extends State<EnhancedTodaysRemindersCar
                 padding: EdgeInsets.only(bottom: index < doses.length - 1 ? 8 : 0),
                 child: _buildDoseItem(dose),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

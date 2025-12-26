@@ -319,7 +319,19 @@ async function startScheduler() {
     }
   }, 60000); // Check every minute for midnight
   
+  // Start medicine stock alerts checker (runs every 6 hours)
+  const { checkMedicineAlerts } = require('./notificationService');
+  
+  // Run immediately on startup
+  checkMedicineAlerts().catch(err => console.error('Error checking medicine alerts:', err));
+  
+  // Then run every 6 hours
+  setInterval(async () => {
+    await checkMedicineAlerts();
+  }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+  
   console.log('✅ Medicine Reminder Scheduler started');
+  console.log('✅ Medicine Stock Alerts Checker started (runs every 6 hours)');
 }
 
 module.exports = {

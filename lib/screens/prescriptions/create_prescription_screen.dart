@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../models/prescription_model.dart';
 import '../../models/appointment_model.dart' show PatientInfo;
 import '../../providers/prescription_provider.dart';
 import '../../core/theme/app_theme.dart';

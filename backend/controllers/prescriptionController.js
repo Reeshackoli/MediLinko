@@ -160,7 +160,7 @@ exports.getPatientDoctors = async (req, res) => {
   }
 };
 
-// Get doctor's patients (who have appointments)
+// Get doctor's patients (who have appointments or prescriptions)
 exports.getDoctorPatients = async (req, res) => {
   try {
     const doctorId = req.user._id;
@@ -168,6 +168,7 @@ exports.getDoctorPatients = async (req, res) => {
 
     const Appointment = require('../models/Appointment');
     
+    // Get patients from appointments
     const appointments = await Appointment.find({
       doctorId: doctorId,
       status: { $in: ['approved', 'completed'] }
@@ -177,8 +178,17 @@ exports.getDoctorPatients = async (req, res) => {
 
     console.log(`📊 Found ${appointments.length} appointments (approved/completed)`);
 
-    // Get unique patients
+    // Get patients from prescriptions
+    const prescriptions = await Prescription.find({ doctor: doctorId })
+      .populate('patient', 'fullName email phone')
+      .sort({ createdAt: -1 });
+
+    console.log(`📝 Found ${prescriptions.length} prescriptions`);
+
+    // Combine unique patients from both sources
     const patientsMap = new Map();
+    
+    // Add patients from appointments
     appointments.forEach(appointment => {
       if (appointment.userId && !patientsMap.has(appointment.userId._id.toString())) {
         patientsMap.set(appointment.userId._id.toString(), {
@@ -187,6 +197,19 @@ exports.getDoctorPatients = async (req, res) => {
           email: appointment.userId.email,
           phone: appointment.userId.phone,
           lastAppointmentDate: appointment.date
+        });
+      }
+    });
+
+    // Add patients from prescriptions
+    prescriptions.forEach(prescription => {
+      if (prescription.patient && !patientsMap.has(prescription.patient._id.toString())) {
+        patientsMap.set(prescription.patient._id.toString(), {
+          _id: prescription.patient._id,
+          fullName: prescription.patient.fullName,
+          email: prescription.patient.email,
+          phone: prescription.patient.phone,
+          lastPrescriptionDate: prescription.createdAt
         });
       }
     });

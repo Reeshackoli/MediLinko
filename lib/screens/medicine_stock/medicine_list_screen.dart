@@ -32,6 +32,73 @@ class _MedicineListScreenState extends ConsumerState<MedicineListScreen> {
       ),
       body: Column(
         children: [
+          // Alert Summary Banner
+          medicinesAsync.when(
+            data: (medicines) {
+              final expiredCount = medicines.where((m) => m.expiryDate.isBefore(DateTime.now())).length;
+              final expiringSoonCount = medicines.where((m) => m.isExpiringSoon && !m.expiryDate.isBefore(DateTime.now())).length;
+              final lowStockCount = medicines.where((m) => m.isLowStock).length;
+
+              if (expiredCount == 0 && expiringSoonCount == 0 && lowStockCount == 0) {
+                return const SizedBox.shrink();
+              }
+
+              return Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Alerts',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 4,
+                            children: [
+                              if (expiredCount > 0)
+                                Text(
+                                  '$expiredCount Expired',
+                                  style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                                ),
+                              if (expiringSoonCount > 0)
+                                Text(
+                                  '$expiringSoonCount Expiring Soon',
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                ),
+                              if (lowStockCount > 0)
+                                Text(
+                                  '$lowStockCount Low Stock',
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
           // Search and Filter
           Padding(
             padding: const EdgeInsets.all(16.0),

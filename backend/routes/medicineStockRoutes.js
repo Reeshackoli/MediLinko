@@ -6,7 +6,8 @@ const {
   updateMedicine,
   deleteMedicine,
   getLowStockAlerts,
-  getExpiryAlerts
+  getExpiryAlerts,
+  recordSale
 } = require('../controllers/medicineStockController');
 const { protect } = require('../middleware/auth');
 
@@ -16,6 +17,9 @@ router.use(protect);
 // Alert routes (must come before parameterized routes)
 router.get('/alerts/low-stock', getLowStockAlerts);
 router.get('/alerts/expiring', getExpiryAlerts);
+
+// Sale recording route (MUST come before /:id routes to avoid conflicts)
+router.post('/:id/sale', recordSale);
 
 // Main CRUD routes
 router.post('/', addMedicine);

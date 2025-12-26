@@ -115,8 +115,9 @@ class _UnifiedRemindersCardState extends ConsumerState<UnifiedRemindersCard> wit
       final period = parts[1].toUpperCase();
       int hour = int.parse(timePart[0]);
       final minute = timePart[1];
-      if (period == 'PM' && hour != 12) hour += 12;
-      else if (period == 'AM' && hour == 12) hour = 0;
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) hour = 0;
       return '${hour.toString().padLeft(2, '0')}:$minute';
     } catch (e) {
       return time12;

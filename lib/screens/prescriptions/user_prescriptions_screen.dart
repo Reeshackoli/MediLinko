@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/appointment_model.dart' show DoctorInfo;
 import '../../providers/prescription_provider.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -28,10 +27,11 @@ class _UserPrescriptionsScreenState extends ConsumerState<UserPrescriptionsScree
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('My Prescriptions'),
+        title: const Text('My Prescriptions', style: TextStyle(color: Colors.white)),
         elevation: 0,
         backgroundColor: AppTheme.primaryBlue,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: doctorsState.when(
         data: (doctors) {

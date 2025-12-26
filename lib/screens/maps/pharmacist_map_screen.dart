@@ -202,7 +202,7 @@ class _PharmaciesMapScreenState extends ConsumerState<PharmaciesMapScreen> {
                   end: Alignment.bottomRight,
                   colors: [
                     Color(0xFF5FD4C4),
-                    Color(0xFF4C9AFF),
+                    Color(0xFF6FE4D4),
                   ],
                 ),
                 boxShadow: [

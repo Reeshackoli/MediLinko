@@ -64,11 +64,11 @@ medicineStockSchema.virtual('isLowStock').get(function() {
   return this.quantity <= this.lowStockLevel;
 });
 
-// Virtual for checking if medicine is expiring soon (within 30 days)
+// Virtual for checking if medicine is expiring soon (within 7 days)
 medicineStockSchema.virtual('isExpiringSoon').get(function() {
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-  return this.expiryDate <= thirtyDaysFromNow;
+  const sevenDaysFromNow = new Date();
+  sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+  return this.expiryDate <= sevenDaysFromNow;
 });
 
 // Virtual for days until expiry
