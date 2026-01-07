@@ -15,7 +15,7 @@ class ApiConfig {
   // - Option C: Current computer IP: 10.40.93.175 (for local testing)
   
   // PRODUCTION: Change this to your Render.com URL after deployment
-  static String _cachedUrl = 'https://medilinko-api.onrender.com/api';
+  static String _cachedUrl = 'https://medilinko.onrender.com/api';
   static bool _isInitialized = false;
   
   /// Get base URL synchronously (use this in your code)
