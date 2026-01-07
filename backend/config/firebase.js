@@ -35,21 +35,20 @@ try {
     } catch (error) {
       console.warn('⚠️  Firebase service account not found. Please add firebase-service-account.json or set environment variables');
       console.warn('   Required env vars: FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL');
+      console.warn('   Download from: Firebase Console → Project Settings → Service Accounts');
+      
+      // Mock messaging for development
+      messaging = {
+        send: async () => {
+          console.log('📨 Mock notification sent (Firebase not configured)');
+          return { messageId: 'mock-' + Date.now() };
+        },
+        sendMulticast: async () => {
+          console.log('📨 Mock notifications sent (Firebase not configured)');
+          return { successCount: 0, failureCount: 0 };
+        }
+      };
     }
-  }
-    console.warn('   Download from: Firebase Console → Project Settings → Service Accounts');
-    
-    // Mock messaging for development
-    messaging = {
-      send: async () => {
-        console.log('📨 Mock notification sent (Firebase not configured)');
-        return { messageId: 'mock-' + Date.now() };
-      },
-      sendMulticast: async () => {
-        console.log('📨 Mock notifications sent (Firebase not configured)');
-        return { successCount: 0, failureCount: 0 };
-      }
-    };
   }
 } catch (error) {
   console.error('❌ Error initializing Firebase:', error.message);
