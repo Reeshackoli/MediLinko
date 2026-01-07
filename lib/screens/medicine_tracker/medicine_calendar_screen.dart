@@ -276,24 +276,29 @@ class _MedicineCalendarScreenState extends State<MedicineCalendarScreen> {
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Day number
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '${day.day}',
-                      style: TextStyle(
-                        fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 16,
-                        color: isToday ? Colors.blue : Colors.black87,
+                    Flexible(
+                      child: Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 14,
+                          color: isToday ? Colors.blue : Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isToday)
                       Container(
-                        margin: const EdgeInsets.only(left: 4),
-                        width: 6,
-                        height: 6,
+                        margin: const EdgeInsets.only(left: 2),
+                        width: 4,
+                        height: 4,
                         decoration: const BoxDecoration(
                           color: Colors.blue,
                           shape: BoxShape.circle,
@@ -302,30 +307,33 @@ class _MedicineCalendarScreenState extends State<MedicineCalendarScreen> {
                   ],
                 ),
                 
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 
                 // Medicine count indicator
                 if (medicines.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.medication, color: Colors.white, size: 12),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${medicines.length}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      constraints: const BoxConstraints(maxWidth: 50),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.medication, color: Colors.white, size: 10),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${medicines.length}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
               ],

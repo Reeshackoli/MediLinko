@@ -2,10 +2,30 @@ const Notification = require('../models/Notification');
 const { sendPushNotification } = require('./fcmService');
 
 /**
- * Send low stock alert to pharmacist
+ * Send low stock alert to pharmacist ONLY
  */
 async function sendLowStockAlert(userId, medicine) {
   try {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    
+    // CRITICAL: Only send to pharmacists
+    if (!user || user.role !== 'pharmacist') {
+      console.error('❌ SECURITY: Attempted to send low stock alert to non-pharmacist:', {
+        userId,
+        userRole: user?.role || 'unknown',
+        userName: user?.fullName || 'unknown'
+      });
+      return null;
+    }
+    
+    console.log('📊 Sending low stock alert to PHARMACIST:', {
+      userId,
+      userName: user.fullName,
+      role: user.role,
+      medicine: medicine.medicineName
+    });
+    
     // Create in-app notification
     const notification = await Notification.create({
       userId,

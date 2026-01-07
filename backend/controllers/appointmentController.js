@@ -153,6 +153,13 @@ exports.getDoctorAppointments = async (req, res) => {
       });
     }
 
+    console.log('📋 Fetching appointments for doctor:', {
+      doctorId: doctorId.toString(),
+      doctorName: doctor.fullName || 'Unknown',
+      email: doctor.email,
+      filters: { status, date },
+    });
+
     const filter = { doctorId };
     if (status) {
       filter.status = status;
@@ -165,6 +172,8 @@ exports.getDoctorAppointments = async (req, res) => {
       .populate('userId', 'fullName email phone')
       .sort({ date: 1, time: 1 })
       .lean();
+
+    console.log(`✅ Found ${appointments.length} appointments for ${doctor.fullName || 'doctor'}`);
 
     // Fetch health profiles for all patients in one query
     const userIds = appointments.map(apt => apt.userId._id);
@@ -196,7 +205,7 @@ exports.getDoctorAppointments = async (req, res) => {
       };
     });
 
-    console.log(`✅ Fetched ${enrichedAppointments.length} appointments with patient profiles`);
+    console.log(`✅ Returning ${enrichedAppointments.length} enriched appointments to ${doctor.fullName || 'doctor'}`);
 
     res.json({
       success: true,
@@ -617,6 +626,12 @@ exports.getAppointmentStats = async (req, res) => {
       });
     }
 
+    console.log('📊 Fetching stats for doctor:', {
+      doctorId: doctorId.toString(),
+      doctorName: doctor.fullName || 'Unknown',
+      email: doctor.email,
+    });
+
     // Get today's date in YYYY-MM-DD format (local timezone)
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -631,13 +646,18 @@ exports.getAppointmentStats = async (req, res) => {
       Appointment.countDocuments({ doctorId, status: 'approved' }),
     ]);
     
-    console.log('📊 Today count:', todayCount, 'Date queried:', today);
+    console.log('📊 Stats for', doctor.fullName || 'Doctor', ':', {
+      total: totalCount,
+      today: todayCount,
+      pending: pendingCount,
+      approved: approvedCount,
+    });
 
     // Get unique patient count
     const uniquePatients = await Appointment.distinct('userId', { doctorId });
     const totalPatients = uniquePatients.length;
 
-    // Stats calculated
+    console.log('👥 Total unique patients:', totalPatients);
 
     res.json({
       success: true,

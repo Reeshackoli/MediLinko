@@ -907,36 +907,44 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen>
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          '${day.day}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected 
-                                ? Colors.white
-                                : isCurrentMonth 
-                                    ? AppTheme.textPrimary
-                                    : AppTheme.textSecondary.withOpacity(0.4),
+                        Flexible(
+                          child: Text(
+                            '${day.day}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected 
+                                  ? Colors.white
+                                  : isCurrentMonth 
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.textSecondary.withOpacity(0.4),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (total > 0)
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1),
                         if (total > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? Colors.white.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$taken/$total',
-                              style: GoogleFonts.poppins(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : AppTheme.textPrimary,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              constraints: const BoxConstraints(maxWidth: 45),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? Colors.white.withOpacity(0.3)
+                                    : Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '$taken/$total',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected ? Colors.white : AppTheme.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
@@ -1155,27 +1163,33 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen>
                           Row(
                             children: [
                               Icon(Icons.medication_liquid, size: 14, color: AppTheme.textSecondary),
-                              const SizedBox(width: 6),
-                              Text(
-                                dosage,
-                                style: GoogleFonts.lato(
-                                  fontSize: 13,
-                                  color: AppTheme.textSecondary,
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  dosage,
+                                  style: GoogleFonts.lato(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: allTaken ? AppTheme.successColor.withOpacity(0.15) : AppTheme.primaryBlue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '$takenCount of $totalCount taken',
-                                  style: GoogleFonts.lato(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: allTaken ? AppTheme.successColor : AppTheme.primaryBlue,
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: allTaken ? AppTheme.successColor.withOpacity(0.15) : AppTheme.primaryBlue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$takenCount/$totalCount',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: allTaken ? AppTheme.successColor : AppTheme.primaryBlue,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),

@@ -64,8 +64,8 @@ class UserAppointmentsNotifier extends StateNotifier<AsyncValue<List<Appointment
   }
 }
 
-// Doctor appointments provider
-final doctorAppointmentsProvider = StateNotifierProvider<DoctorAppointmentsNotifier, AsyncValue<List<AppointmentModel>>>((ref) {
+// Doctor appointments provider - with autoDispose to prevent caching across different doctors
+final doctorAppointmentsProvider = StateNotifierProvider.autoDispose<DoctorAppointmentsNotifier, AsyncValue<List<AppointmentModel>>>((ref) {
   return DoctorAppointmentsNotifier();
 });
 
@@ -162,8 +162,8 @@ final availableSlotsProvider = FutureProvider.family<List<String>, Map<String, S
   return [];
 });
 
-// Doctor stats provider
-final doctorStatsProvider = FutureProvider<Map<String, int>>((ref) async {
+// Doctor stats provider - with autoDispose to prevent caching across different doctors
+final doctorStatsProvider = FutureProvider.autoDispose<Map<String, int>>((ref) async {
   final response = await AppointmentService.getAppointmentStats();
 
   if (response['success'] == true && response['stats'] != null) {

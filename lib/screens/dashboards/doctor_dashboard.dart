@@ -24,6 +24,7 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
   void initState() {
     super.initState();
     _initializeAppointmentListener();
+    _loadInitialData();
     _setupAnimations();
   }
 
@@ -36,6 +37,15 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
           userId: user.id,
         );
       }
+    });
+  }
+
+  void _loadInitialData() {
+    // Load appointments for this specific doctor
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(doctorAppointmentsProvider.notifier).loadAppointments();
+      // Invalidate stats to force refresh
+      ref.invalidate(doctorStatsProvider);
     });
   }
 

@@ -8,7 +8,14 @@ const { admin, messaging } = require('../config/firebase');
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
+    const userRole = req.user.role;
     const { read, limit = 50 } = req.query;
+
+    console.log('📬 Fetching notifications for:', {
+      userId: userId.toString(),
+      role: userRole,
+      userName: req.user.fullName || 'Unknown'
+    });
 
     const filter = { userId };
     if (read !== undefined) {

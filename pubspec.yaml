@@ -80,16 +80,24 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "APPICONLOGO.png"
   min_sdk_android: 21
   
-  # Adaptive icon with proper padding to prevent cropping
+  # Android adaptive icon - using white background with proper padding
+  # This prevents the icon from bleeding outside the safe zone
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo.png"
-  adaptive_icon_monochrome: "assets/images/logo.png"
+  adaptive_icon_foreground: "APPICONLOGO.png"
+  adaptive_icon_monochrome: "APPICONLOGO.png"
   
-  # iOS settings
+  # iOS settings - standard padding
   remove_alpha_ios: true
+  
+  # Web settings
+  web:
+    generate: true
+    image_path: "APPICONLOGO.png"
+    background_color: "#FFFFFF"
+    theme_color: "#4C9AFF"
 
 flutter_native_splash:
   color: "#FFFFFF"
