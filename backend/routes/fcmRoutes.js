@@ -10,7 +10,16 @@ router.post('/save-token', protect, async (req, res) => {
   try {
     const { token, device } = req.body;
     
+    console.log('📥 FCM Token Save Request:', {
+      userId: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+      device,
+      tokenPreview: token ? token.substring(0, 30) + '...' : 'NO_TOKEN'
+    });
+    
     if (!token) {
+      console.error('❌ FCM token missing in request');
       return res.status(400).json({ error: 'FCM token is required' });
     }
     
