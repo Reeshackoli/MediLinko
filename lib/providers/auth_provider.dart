@@ -1,10 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/session_manager.dart';
+import '../services/notification_service_fcm.dart';
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   AuthNotifier() : super(const AsyncValue.data(null));
+
+  // Helper method to save FCM token after authentication
+  Future<void> _saveFCMTokenAfterAuth() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await NotificationService.saveFCMTokenToBackend(token);
+      }
+    } catch (e) {
+      // Don't fail auth if FCM token save fails
+      print('⚠️ Failed to save FCM token after auth: $e');
+    }
+  }
 
   // Restore user from saved session (from Map)
   void restoreUser(Map<String, dynamic> userData) {
@@ -38,6 +53,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         // Save session for persistence
         await SessionManager.saveUserSession(userData);
         
+        // Save FCM token after successful login
+        await _saveFCMTokenAfterAuth();
+        
         state = AsyncValue.data(user);
         return null; // Success
       } else {
@@ -66,6 +84,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
       if (response.success && response.data != null) {
         final userData = response.data!['user'];
         final registeredUser = UserModel.fromJson(userData);
+        
+        // Save FCM token after successful registration
+        await _saveFCMTokenAfterAuth();
+        
         state = AsyncValue.data(registeredUser);
         return null; // Success
       } else {

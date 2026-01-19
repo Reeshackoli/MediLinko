@@ -85,14 +85,14 @@ class NotificationService {
 
       // Save token to backend (will try to save, skip if no auth token yet)
       if (_fcmToken != null) {
-        await _saveFCMTokenToBackend(_fcmToken!);
+        await saveFCMTokenToBackend(_fcmToken!);
       }
 
       // Listen for token refresh
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
         debugPrint('🔄 FCM Token refreshed: $newToken');
-        _saveFCMTokenToBackend(newToken);
+        saveFCMTokenToBackend(newToken);
       });
 
       // Handle foreground messages
@@ -134,7 +134,7 @@ class NotificationService {
   }
 
   // Save FCM token to backend
-  static Future<void> _saveFCMTokenToBackend(String token) async {
+  static Future<void> saveFCMTokenToBackend(String token) async {
     try {
       debugPrint('💾 Attempting to save FCM token to backend...');
       

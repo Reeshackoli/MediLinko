@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_model.dart';
 import '../../models/user_role.dart';
 import '../../services/profile_service.dart';
+import '../../services/emergency_web_service.dart';
+import '../../services/session_manager.dart';
 
 class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
   ProfileWizardNotifier() : super({});
@@ -167,6 +169,25 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
       final response = await ProfileService.updateProfile(completeData);
 
       if (response['success']) {
+        // Sync emergency data to emergencyMed service (for users only)
+        if (baseUser.role == UserRole.user) {
+          try {
+            final userData = await SessionManager.getUserData();
+            final userId = userData?['userId'] ?? userData?['_id'];
+            
+            if (userId != null) {
+              await EmergencyWebService.syncEmergencyData(
+                userId: userId,
+                emergencyData: completeData,
+              );
+              print('✅ Emergency data synced to emergencyMed');
+            }
+          } catch (e) {
+            print('⚠️ Emergency sync failed (non-critical): $e');
+            // Don't fail wizard completion if sync fails
+          }
+        }
+        
         clearData();
         return null; // Success
       } else {

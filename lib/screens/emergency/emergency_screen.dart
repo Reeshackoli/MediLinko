@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/session_manager.dart';
 import '../../services/notification_service.dart';
 import '../../services/lockscreen_service.dart';
+import '../../services/emergency_web_service.dart';
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -16,7 +17,9 @@ class EmergencyScreen extends StatefulWidget {
 
 class _EmergencyScreenState extends State<EmergencyScreen> {
   Map<String, dynamic>? _emergencyData;
+  String? _qrWebUrl;
   bool _isLoading = true;
+  bool _useWebUrl = true; // Toggle between web URL and static text
 
   @override
   void initState() {
@@ -70,8 +73,23 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   Future<void> _loadEmergencyData() async {
     // Load from local storage (accessible offline)
     final data = await SessionManager.getEmergencyData();
+    
+    // Try to fetch web QR URL from emergencyMed service
+    String? webUrl;
+    try {
+      webUrl = await EmergencyWebService.getQRCodeUrl();
+      if (webUrl != null) {
+        debugPrint('✅ Using emergencyMed web URL: $webUrl');
+      } else {
+        debugPrint('⚠️ EmergencyMed URL not available, using offline mode');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to fetch web URL: $e');
+    }
+    
     setState(() {
       _emergencyData = data;
+      _qrWebUrl = webUrl;
       _isLoading = false;
     });
   }
@@ -95,14 +113,23 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     final emergencyContactName2 = _emergencyData?['emergencyContactName2'] ?? '';
     final emergencyContactPhone2 = _emergencyData?['emergencyContactPhone2'] ?? '';
 
-    // QR Code data
-    final qrData = '''
+    // QR Code data - use web URL if available, fallback to static text
+    String qrData;
+    if (_qrWebUrl != null && _useWebUrl) {
+      // Web URL mode - points to emergencyMed web interface
+      qrData = _qrWebUrl!;
+      debugPrint('🌐 QR Code Mode: Web URL');
+    } else {
+      // Offline mode - static text
+      qrData = '''
 🚨 MEDICAL EMERGENCY
 Name: $name
 Blood Type: $bloodGroup
 Allergies: $allergies
 Emergency Contact 1: $emergencyContactName ($emergencyContactPhone)${emergencyContactName2.isNotEmpty ? '\nEmergency Contact 2: $emergencyContactName2 ($emergencyContactPhone2)' : ''}
 ''';
+      debugPrint('📄 QR Code Mode: Offline Text');
+    }
 
     return Scaffold(
       backgroundColor: Colors.red,
@@ -221,16 +248,51 @@ Emergency Contact 1: $emergencyContactName ($emergencyContactPhone)${emergencyCo
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'SCAN FOR FULL MEDICAL INFO',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        letterSpacing: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'SCAN FOR FULL MEDICAL INFO',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            letterSpacing: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (_qrWebUrl != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'WEB',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                    if (_qrWebUrl != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Opens in browser - No app needed',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.green.shade700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(16),

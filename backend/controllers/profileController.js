@@ -2,6 +2,7 @@ const User = require('../models/User');
 const HealthProfile = require('../models/HealthProfile');
 const DoctorProfile = require('../models/DoctorProfile');
 const PharmacistProfile = require('../models/PharmacistProfile');
+const { syncEmergencyData } = require('./emergencySyncController');
 
 // @desc    Update user profile
 // @route   PUT /api/profile
@@ -114,6 +115,23 @@ exports.updateProfile = async (req, res) => {
 
     // Mark user profile as complete
     await User.findByIdAndUpdate(userId, { isProfileComplete: true });
+
+    // Sync emergency data to emergencyMed service (for users only)
+    if (user.role === 'user' && profile) {
+      try {
+        // Don't await - run async to avoid blocking response
+        syncEmergencyData({
+          user: { userId, ...user.toObject() },
+          body: { healthProfile: profile.toObject() }
+        }, {
+          status: () => ({ json: () => {} }) // Mock response
+        });
+        console.log('🔄 Emergency data sync initiated');
+      } catch (syncError) {
+        console.log('⚠️ Emergency sync failed:', syncError.message);
+        // Don't fail the main request
+      }
+    }
 
     console.log('✅ Profile update complete - sending response');
     res.status(200).json({

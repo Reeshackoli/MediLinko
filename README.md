@@ -12,6 +12,7 @@ A comprehensive role-based healthcare application built with Flutter and Node.js
 | [🗺️ SETUP_FLOWCHART.md](SETUP_FLOWCHART.md) | Visual setup guide | Visual learner |
 | [❓ FAQ.md](FAQ.md) | Common questions & answers | Troubleshooting, general help |
 | [📦 REPO_SETUP_SUMMARY.md](REPO_SETUP_SUMMARY.md) | What's in this repo | Understanding structure |
+| [🔗 EMERGENCY_INTEGRATION.md](EMERGENCY_INTEGRATION.md) | EmergencyMed QR integration | Setting up emergency QR system |
 | [🤝 CONTRIBUTING.md](CONTRIBUTING.md) | Development guidelines | Contributing code |
 
 > **New Developer?** Start with [QUICK_START.md](QUICK_START.md) or [SETUP_FLOWCHART.md](SETUP_FLOWCHART.md)  
@@ -23,6 +24,7 @@ A comprehensive role-based healthcare application built with Flutter and Node.js
 - 💊 Medicine reminder system with dose tracking
 - 📅 Book appointments with doctors
 - 🔍 Find nearby pharmacies
+- 🚨 Emergency QR code with web interface
 - 📋 Health profile management
 - ⭐ Rate and review doctors/pharmacies
 - 🔔 Push notifications for reminders
@@ -307,6 +309,7 @@ cd .. && flutter run
 ## 📚 Documentation
 
 - [FCM Setup Guide](FCM_SETUP_GUIDE.md) - Firebase Cloud Messaging setup
+- [Emergency Integration Guide](EMERGENCY_INTEGRATION.md) - EmergencyMed QR code integration
 - [Medicine Tracker Enhancement](MEDICINE_TRACKER_ENHANCEMENT.md) - Feature details
 - [Copilot Instructions](.github/copilot-instructions.md) - Development guidelines
 
