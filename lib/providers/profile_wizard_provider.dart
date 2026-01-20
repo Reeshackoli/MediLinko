@@ -172,7 +172,7 @@ class ProfileWizardNotifier extends StateNotifier<Map<String, dynamic>> {
         // Sync emergency data to emergencyMed service (for users only)
         if (baseUser.role == UserRole.user) {
           try {
-            final userData = await SessionManager.getUserData();
+            final userData = await SessionManager.getUserSession();
             final userId = userData?['userId'] ?? userData?['_id'];
             
             if (userId != null) {

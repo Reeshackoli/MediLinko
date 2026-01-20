@@ -24,4 +24,25 @@ router.get('/qr-url', auth, emergencySyncController.getQRUrl);
  */
 router.get('/service-status', auth, emergencySyncController.checkEmergencyService);
 
+/**
+ * @route   GET /api/emergency/qr-code
+ * @desc    Generate QR code as PNG image
+ * @access  Private
+ */
+router.get('/qr-code', auth, emergencySyncController.generateQRCode);
+
+/**
+ * @route   GET /api/emergency/qr-data
+ * @desc    Get QR code as base64 data URL (for mobile apps)
+ * @access  Private
+ */
+router.get('/qr-data', auth, emergencySyncController.getQRCodeDataUrl);
+
+/**
+ * @route   GET /api/emergency/qr-display
+ * @desc    Display QR code in HTML page (for web browsers)
+ * @access  Private
+ */
+router.get('/qr-display', auth, emergencySyncController.displayQRCodePage);
+
 module.exports = router;

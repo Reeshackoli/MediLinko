@@ -197,11 +197,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                tooltip: 'Server Settings',
-                onPressed: () => context.push('/settings/server'),
-              ),
-              IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                 onPressed: () => context.push('/notifications'),
               ),

@@ -95,13 +95,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Server Settings',
-            onPressed: () => context.push('/settings/server'),
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

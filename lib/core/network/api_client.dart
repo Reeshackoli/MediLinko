@@ -1,10 +1,11 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_config.dart';
 
 class ApiClient {
-  // Base URL - update for your environment
-  static const String baseUrl = 'http://localhost:5000/api';
+  // Use ApiConfig for automatic production/development URL switching
+  static String get baseUrl => ApiConfig.baseUrl;
 
   // Simple GET helper
   static Future<Map<String, dynamic>> get(

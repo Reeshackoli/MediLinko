@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_config.dart';
 
 class ApiService {
-  // Match backend `server.js` default PORT (3000)
-  static const String baseUrl = 'http://localhost:3000/api';
+  // Use ApiConfig for automatic production/development URL switching
+  static String get baseUrl => ApiConfig.baseUrl;
 
   static Future<Map<String, dynamic>> get(
     String endpoint, {

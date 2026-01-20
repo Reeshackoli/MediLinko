@@ -12,13 +12,6 @@ class OnboardingScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Server Settings',
-            onPressed: () => context.push('/settings/server'),
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
