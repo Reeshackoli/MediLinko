@@ -17,13 +17,28 @@ class EmergencyWebService {
   static const String _emergencyUserIdKey = 'emergency_user_id';
   
   /// Get QR code URL for the current user
-  /// First tries to use cached emergency user ID, then fetches from backend
+  /// Priority: 1. User session qrCodeId, 2. Cached emergency user ID, 3. Fetch from backend
   static Future<String?> getQRCodeUrl() async {
     try {
-      // First check if we have a cached emergency user ID
       final prefs = await SharedPreferences.getInstance();
-      final cachedEmergencyUserId = prefs.getString(_emergencyUserIdKey);
       
+      // First check if user session has qrCodeId (from login response)
+      final userData = await SessionManager.getUserSession();
+      if (userData != null) {
+        final qrCodeId = userData['qrCodeId'] as String?;
+        if (qrCodeId != null && qrCodeId.isNotEmpty) {
+          final qrUrl = '$_webFrontendUrl/profile/$qrCodeId';
+          debugPrint('✅ Using qrCodeId from session: $qrCodeId');
+          debugPrint('✅ QR URL: $qrUrl');
+          
+          // Also cache it for consistency
+          await prefs.setString(_emergencyUserIdKey, qrCodeId);
+          return qrUrl;
+        }
+      }
+      
+      // Check if we have a cached emergency user ID
+      final cachedEmergencyUserId = prefs.getString(_emergencyUserIdKey);
       if (cachedEmergencyUserId != null && cachedEmergencyUserId.isNotEmpty) {
         final qrUrl = '$_webFrontendUrl/profile/$cachedEmergencyUserId';
         debugPrint('✅ Using cached emergency user ID: $cachedEmergencyUserId');
@@ -32,7 +47,6 @@ class EmergencyWebService {
       }
       
       // If no cached ID, try to fetch from backend
-      final userData = await SessionManager.getUserSession();
       if (userData == null) {
         debugPrint('❌ No user data found');
         return null;

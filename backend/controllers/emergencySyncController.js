@@ -1,4 +1,5 @@
 const axios = require('axios');
+const User = require('../models/User');
 
 // QRCode module with fallback for environments where it might not be available
 let QRCode;
@@ -62,11 +63,24 @@ exports.syncEmergencyData = async (req, res) => {
     );
 
     if (response.status === 200 || response.status === 201) {
-      console.log(`✅ Emergency data synced for user ${userId}`);
+      const emergencyUserId = response.data.userId; // This is the qrCodeId like ML-USER-...
+      console.log(`✅ Emergency data synced for user ${userId}, qrCodeId: ${emergencyUserId}`);
+      
+      // Save the qrCodeId to the user's document in MongoDB
+      if (emergencyUserId) {
+        try {
+          await User.findByIdAndUpdate(userId, { qrCodeId: emergencyUserId });
+          console.log(`✅ qrCodeId saved to user: ${emergencyUserId}`);
+        } catch (dbError) {
+          console.error('⚠️ Failed to save qrCodeId to user:', dbError.message);
+        }
+      }
+      
       return res.status(200).json({
         success: true,
         message: 'Emergency data synced successfully',
-        emergencyUserId: response.data.userId,
+        emergencyUserId: emergencyUserId,
+        qrCodeId: emergencyUserId,
       });
     } else {
       throw new Error(`Unexpected response: ${response.status}`);
@@ -122,17 +136,35 @@ exports.registerInEmergencyMed = async (userData) => {
 };
 
 /**
- * Helper function to get emergency user ID from emergencyMed backend
+ * Helper function to get emergency user ID (qrCodeId)
+ * First tries to get from local User document (same DB), then falls back to API call
  */
 const getEmergencyUserId = async (medilinkoUserId) => {
   try {
+    // First, try to get from local User document (since we share the same MongoDB)
+    const user = await User.findById(medilinkoUserId).select('qrCodeId');
+    if (user && user.qrCodeId) {
+      console.log(`✅ Found qrCodeId in local DB: ${user.qrCodeId}`);
+      return user.qrCodeId;
+    }
+    
+    // Fallback: Try to fetch from emergencyMed API
+    console.log('⚠️ qrCodeId not in local DB, fetching from emergencyMed API...');
     const response = await axios.get(
       `${EMERGENCY_MED_URL}/api/users/medilinko/${medilinkoUserId}`,
       { timeout: 5000 }
     );
     
     if (response.status === 200 && response.data.user) {
-      return response.data.user.userId; // Emergency user ID (e.g., ML-USER-...)
+      const emergencyUserId = response.data.user.userId; // Emergency user ID (e.g., ML-USER-...)
+      
+      // Save it to local DB for future use
+      if (emergencyUserId) {
+        await User.findByIdAndUpdate(medilinkoUserId, { qrCodeId: emergencyUserId });
+        console.log(`✅ Saved qrCodeId to local DB: ${emergencyUserId}`);
+      }
+      
+      return emergencyUserId;
     }
     return null;
   } catch (error) {
@@ -148,7 +180,7 @@ exports.getQRUrl = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Get emergency user ID from emergencyMed backend
+    // Get emergency user ID (qrCodeId) - first from local DB, then from API
     const emergencyUserId = await getEmergencyUserId(userId);
     
     if (!emergencyUserId) {

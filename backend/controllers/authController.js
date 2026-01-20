@@ -100,7 +100,8 @@ exports.login = async (req, res) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      isProfileComplete: user.isProfileComplete
+      isProfileComplete: user.isProfileComplete,
+      qrCodeId: user.qrCodeId || null
     };
 
     res.status(200).json({
@@ -132,7 +133,8 @@ exports.getMe = async (req, res) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      isProfileComplete: user.isProfileComplete
+      isProfileComplete: user.isProfileComplete,
+      qrCodeId: user.qrCodeId || null
     };
 
     res.status(200).json({
