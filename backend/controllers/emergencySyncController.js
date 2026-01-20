@@ -16,13 +16,26 @@ const EMERGENCY_MED_URL = process.env.EMERGENCY_MED_URL || 'http://localhost:500
 const EMERGENCY_WEB_URL = process.env.EMERGENCY_WEB_URL || 'http://localhost:3001';
 
 /**
- * Sync user emergency data to emergencyMed service
- * Called when user updates their health profile
+ * Generate a unique qrCodeId for a user
+ * Format: ML-{ROLE}-{timestamp}-{random}
+ */
+const generateQRCodeId = (role) => {
+  const rolePrefix = role ? role.toUpperCase() : 'USER';
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ML-${rolePrefix}-${timestamp}-${randomPart}`;
+};
+
+/**
+ * Sync user emergency data - generates qrCodeId locally
+ * Since MediLinko and EmergencyMed share the same MongoDB, we generate the ID directly
  */
 exports.syncEmergencyData = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { healthProfile } = req.body;
+
+    console.log(`📥 Sync request received for user: ${userId}`);
 
     if (!healthProfile) {
       return res.status(400).json({
@@ -31,144 +44,109 @@ exports.syncEmergencyData = async (req, res) => {
       });
     }
 
-    // Prepare emergency data for sync
-    const emergencyData = {
-      medilinkoUserId: userId,
-      fullName: healthProfile.name || req.user.fullName,
-      email: req.user.email,
-      phone: req.user.phone,
-      role: req.user.role,
-      bloodGroup: healthProfile.bloodGroup,
-      allergies: healthProfile.allergies || [],
-      conditions: healthProfile.conditions || [],
-      currentMedicines: healthProfile.currentMedicines || [],
-      emergencyContactName: healthProfile.emergencyContactName,
-      emergencyContactRelationship: healthProfile.emergencyContactRelationship,
-      emergencyContactPhone: healthProfile.emergencyContactPhone,
-      emergencyContactName2: healthProfile.emergencyContactName2,
-      emergencyContactRelationship2: healthProfile.emergencyContactRelationship2,
-      emergencyContactPhone2: healthProfile.emergencyContactPhone2,
+    // Get the current user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Check if user already has a qrCodeId
+    let qrCodeId = user.qrCodeId;
+    
+    // Generate new qrCodeId if not exists
+    if (!qrCodeId) {
+      qrCodeId = generateQRCodeId(user.role);
+      console.log(`🔑 Generated new qrCodeId: ${qrCodeId}`);
+    } else {
+      console.log(`✅ Using existing qrCodeId: ${qrCodeId}`);
+    }
+
+    // Update user with emergency data and qrCodeId
+    const updateData = {
+      qrCodeId: qrCodeId,
+      // Store emergency-related health data
+      'healthProfile.bloodGroup': healthProfile.bloodGroup,
+      'healthProfile.allergies': healthProfile.allergies || [],
+      'healthProfile.conditions': healthProfile.conditions || [],
+      'healthProfile.currentMedicines': healthProfile.currentMedicines || [],
+      'healthProfile.emergencyContactName': healthProfile.emergencyContactName,
+      'healthProfile.emergencyContactRelationship': healthProfile.emergencyContactRelationship,
+      'healthProfile.emergencyContactPhone': healthProfile.emergencyContactPhone,
+      'healthProfile.emergencyContactName2': healthProfile.emergencyContactName2,
+      'healthProfile.emergencyContactRelationship2': healthProfile.emergencyContactRelationship2,
+      'healthProfile.emergencyContactPhone2': healthProfile.emergencyContactPhone2,
     };
 
-    // Send to emergencyMed service
-    const response = await axios.post(
-      `${EMERGENCY_MED_URL}/api/users/sync-from-medilinko`,
-      emergencyData,
-      {
-        timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    await User.findByIdAndUpdate(userId, { $set: updateData });
+    console.log(`✅ User ${userId} updated with qrCodeId: ${qrCodeId}`);
 
-    if (response.status === 200 || response.status === 201) {
-      const emergencyUserId = response.data.userId; // This is the qrCodeId like ML-USER-...
-      console.log(`✅ Emergency data synced for user ${userId}, qrCodeId: ${emergencyUserId}`);
-      
-      // Save the qrCodeId to the user's document in MongoDB
-      if (emergencyUserId) {
-        try {
-          await User.findByIdAndUpdate(userId, { qrCodeId: emergencyUserId });
-          console.log(`✅ qrCodeId saved to user: ${emergencyUserId}`);
-        } catch (dbError) {
-          console.error('⚠️ Failed to save qrCodeId to user:', dbError.message);
-        }
-      }
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Emergency data synced successfully',
-        emergencyUserId: emergencyUserId,
-        qrCodeId: emergencyUserId,
-      });
-    } else {
-      throw new Error(`Unexpected response: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('❌ Error syncing emergency data:', error.message);
-    
-    // Don't fail the main request if sync fails
+    // Generate the QR URL for the web frontend
+    const qrUrl = `${EMERGENCY_WEB_URL}/profile/${qrCodeId}`;
+    console.log(`🔗 QR URL: ${qrUrl}`);
+
     return res.status(200).json({
       success: true,
-      message: 'Profile updated (emergency sync failed)',
-      syncError: error.message,
+      message: 'Emergency data synced successfully',
+      emergencyUserId: qrCodeId,
+      qrCodeId: qrCodeId,
+      qrUrl: qrUrl,
+    });
+  } catch (error) {
+    console.error('❌ Error syncing emergency data:', error.message);
+    console.error(error.stack);
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to sync emergency data',
+      error: error.message,
     });
   }
 };
 
 /**
- * Register new user in emergencyMed service
- * Called during user registration
+ * Generate qrCodeId for new user during registration
+ * Called during user registration (generates ID locally since we share MongoDB)
  */
 exports.registerInEmergencyMed = async (userData) => {
   try {
-    const emergencyData = {
-      medilinkoUserId: userData.userId,
-      fullName: userData.fullName,
-      email: userData.email,
-      phone: userData.phone,
-      role: userData.role,
-    };
-
-    const response = await axios.post(
-      `${EMERGENCY_MED_URL}/api/users/register-from-medilinko`,
-      emergencyData,
-      {
-        timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (response.status === 200 || response.status === 201) {
-      console.log(`✅ User registered in emergencyMed: ${response.data.userId}`);
-      return response.data.userId;
-    }
-
-    return null;
+    const qrCodeId = generateQRCodeId(userData.role);
+    console.log(`🔑 Generated qrCodeId for new user: ${qrCodeId}`);
+    return qrCodeId;
   } catch (error) {
-    console.error('⚠️ Failed to register in emergencyMed:', error.message);
-    // Don't fail registration if emergencyMed is down
+    console.error('⚠️ Failed to generate qrCodeId:', error.message);
     return null;
   }
 };
 
 /**
- * Helper function to get emergency user ID (qrCodeId)
- * First tries to get from local User document (same DB), then falls back to API call
+ * Helper function to get or generate emergency user ID (qrCodeId)
+ * Generates one locally if it doesn't exist (since we share the same MongoDB)
  */
 const getEmergencyUserId = async (medilinkoUserId) => {
   try {
-    // First, try to get from local User document (since we share the same MongoDB)
-    const user = await User.findById(medilinkoUserId).select('qrCodeId');
+    // Try to get from local User document
+    const user = await User.findById(medilinkoUserId).select('qrCodeId role');
+    
     if (user && user.qrCodeId) {
       console.log(`✅ Found qrCodeId in local DB: ${user.qrCodeId}`);
       return user.qrCodeId;
     }
     
-    // Fallback: Try to fetch from emergencyMed API
-    console.log('⚠️ qrCodeId not in local DB, fetching from emergencyMed API...');
-    const response = await axios.get(
-      `${EMERGENCY_MED_URL}/api/users/medilinko/${medilinkoUserId}`,
-      { timeout: 5000 }
-    );
-    
-    if (response.status === 200 && response.data.user) {
-      const emergencyUserId = response.data.user.userId; // Emergency user ID (e.g., ML-USER-...)
-      
-      // Save it to local DB for future use
-      if (emergencyUserId) {
-        await User.findByIdAndUpdate(medilinkoUserId, { qrCodeId: emergencyUserId });
-        console.log(`✅ Saved qrCodeId to local DB: ${emergencyUserId}`);
-      }
-      
-      return emergencyUserId;
+    // Generate a new qrCodeId if user exists but doesn't have one
+    if (user) {
+      const newQrCodeId = generateQRCodeId(user.role);
+      await User.findByIdAndUpdate(medilinkoUserId, { qrCodeId: newQrCodeId });
+      console.log(`🔑 Generated and saved new qrCodeId: ${newQrCodeId}`);
+      return newQrCodeId;
     }
+    
+    console.log('⚠️ User not found');
     return null;
   } catch (error) {
-    console.error('⚠️ Error fetching emergency user ID:', error.message);
+    console.error('⚠️ Error getting/generating emergency user ID:', error.message);
     return null;
   }
 };
