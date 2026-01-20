@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json  # Commented out - we need this for Render deployment
 
 # Environment variables
 .env

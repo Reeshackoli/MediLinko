@@ -47,7 +47,7 @@ app.*.map.json
 # Backend
 /backend/node_modules/
 /backend/.env
-/backend/package-lock.json
+# /backend/package-lock.json  # Commented out - needed for Render deployment
 /backend/config/firebase-service-account.json
 backend/config/firebase-service-account.json
 
