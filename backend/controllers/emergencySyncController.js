@@ -32,7 +32,7 @@ const generateQRCodeId = (role) => {
  */
 exports.syncEmergencyData = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { healthProfile } = req.body;
 
     console.log(`📥 Sync request received for user: ${userId}`);
@@ -156,7 +156,7 @@ const getEmergencyUserId = async (medilinkoUserId) => {
  */
 exports.getQRUrl = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     // Get emergency user ID (qrCodeId) - first from local DB, then from API
     const emergencyUserId = await getEmergencyUserId(userId);
@@ -224,7 +224,7 @@ exports.generateQRCode = async (req, res) => {
       });
     }
 
-    const userId = req.user.userId;
+    const userId = req.user._id;
     
     // Get emergency user ID from emergencyMed backend
     const emergencyUserId = await getEmergencyUserId(userId);
@@ -341,7 +341,7 @@ exports.displayQRCodePage = async (req, res) => {
       `);
     }
 
-    const userId = req.user.userId;
+    const userId = req.user._id;
     
     // Get emergency user ID from emergencyMed backend
     const emergencyUserId = await getEmergencyUserId(userId);
