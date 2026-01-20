@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/emergency_web_service.dart';
@@ -57,7 +58,21 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
 
       // Get user session for userId
       final userData = await SessionManager.getUserSession();
-      final userId = userData?['userId'] ?? userData?['_id'];
+      // Backend returns 'id' not 'userId' or '_id'
+      final userId = userData?['id'] ?? userData?['userId'] ?? userData?['_id'] ?? '';
+      
+      debugPrint('🔍 User session data keys: ${userData?.keys.toList()}');
+      debugPrint('🔍 User ID found: $userId');
+      
+      // Check if userId is valid
+      if (userId.toString().isEmpty) {
+        setState(() {
+          _isSyncing = false;
+          _statusMessage = 'Error: User ID not found. Please logout and login again.';
+          _syncSuccess = false;
+        });
+        return;
+      }
 
       // Get user's health profile
       final profileResponse = await ProfileService.getProfile();
@@ -88,11 +103,11 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
 
       // Sync to emergency service
       final emergencyUserId = await EmergencyWebService.syncEmergencyData(
-        userId: userId,
+        userId: userId.toString(),
         emergencyData: healthProfile,
       );
 
-      if (emergencyUserId != null) {
+      if (emergencyUserId != null && emergencyUserId.isNotEmpty) {
         // Fetch the QR URL
         final qrUrl = await EmergencyWebService.getQRCodeUrl();
         
@@ -110,6 +125,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
         });
       }
     } catch (e) {
+      debugPrint('❌ Sync error: $e');
       setState(() {
         _isSyncing = false;
         _syncSuccess = false;

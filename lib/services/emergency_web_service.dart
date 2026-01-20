@@ -106,6 +106,7 @@ class EmergencyWebService {
       }
 
       debugPrint('✅ Token found, syncing emergency data...');
+      debugPrint('📤 Sending sync request to: $_baseUrl/api/emergency/sync');
 
       final response = await http.post(
         Uri.parse('$_baseUrl/api/emergency/sync'),
@@ -116,7 +117,10 @@ class EmergencyWebService {
         body: jsonEncode({
           'healthProfile': emergencyData,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 15));
+
+      debugPrint('📥 Sync response status: ${response.statusCode}');
+      debugPrint('📥 Sync response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -133,7 +137,7 @@ class EmergencyWebService {
         debugPrint('✅ Emergency data synced successfully (no user ID returned)');
         return null;
       } else {
-        debugPrint('❌ Failed to sync emergency data: ${response.statusCode}');
+        debugPrint('❌ Failed to sync emergency data: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
