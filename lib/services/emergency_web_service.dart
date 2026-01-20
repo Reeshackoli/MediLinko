@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'session_manager.dart';
+import 'token_service.dart';
 
 /// Service to communicate with MediLinko backend for emergency features
 /// The backend forwards requests to emergencyMed service
@@ -15,6 +16,9 @@ class EmergencyWebService {
   
   // Key for storing emergency user ID
   static const String _emergencyUserIdKey = 'emergency_user_id';
+  
+  // Token service instance
+  static final TokenService _tokenService = TokenService();
   
   /// Get QR code URL for the current user
   /// Priority: 1. User session qrCodeId, 2. Cached emergency user ID, 3. Fetch from backend
@@ -47,16 +51,14 @@ class EmergencyWebService {
       }
       
       // If no cached ID, try to fetch from backend
-      if (userData == null) {
-        debugPrint('❌ No user data found');
+      // Get token from TokenService (stored in secure storage)
+      final token = await _tokenService.getToken();
+      if (token == null) {
+        debugPrint('❌ No auth token found in secure storage');
         return null;
       }
 
-      final token = userData['token'];
-      if (token == null) {
-        debugPrint('❌ No auth token found');
-        return null;
-      }
+      debugPrint('✅ Token found, fetching QR URL from backend...');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/api/emergency/qr-url'),
@@ -95,13 +97,15 @@ class EmergencyWebService {
     required Map<String, dynamic> emergencyData,
   }) async {
     try {
-      final userData = await SessionManager.getUserSession();
-      final token = userData?['token'];
+      // Get token from TokenService (stored in secure storage)
+      final token = await _tokenService.getToken();
       
       if (token == null) {
-        debugPrint('❌ No auth token found');
+        debugPrint('❌ No auth token found in secure storage');
         return null;
       }
+
+      debugPrint('✅ Token found, syncing emergency data...');
 
       final response = await http.post(
         Uri.parse('$_baseUrl/api/emergency/sync'),
@@ -153,8 +157,8 @@ class EmergencyWebService {
   /// Check if emergency service is available via MediLinko backend
   static Future<bool> checkServiceHealth() async {
     try {
-      final userData = await SessionManager.getUserSession();
-      final token = userData?['token'];
+      // Get token from TokenService (stored in secure storage)
+      final token = await _tokenService.getToken();
       
       if (token == null) {
         return false;

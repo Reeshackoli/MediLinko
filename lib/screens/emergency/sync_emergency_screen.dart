@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/emergency_web_service.dart';
 import '../../services/session_manager.dart';
 import '../../services/profile_service.dart';
+import '../../services/token_service.dart';
 
 class SyncEmergencyScreen extends StatefulWidget {
   const SyncEmergencyScreen({super.key});
@@ -17,6 +18,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
   String? _statusMessage;
   bool _syncSuccess = false;
   String? _qrCodeUrl;
+  final TokenService _tokenService = TokenService();
 
   @override
   void initState() {
@@ -42,11 +44,9 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
     });
 
     try {
-      // Get user session
-      final userData = await SessionManager.getUserSession();
-      final userId = userData?['userId'] ?? userData?['_id'];
-
-      if (userId == null) {
+      // Check if user has auth token
+      final token = await _tokenService.getToken();
+      if (token == null) {
         setState(() {
           _isSyncing = false;
           _statusMessage = 'Error: Not logged in. Please login again.';
@@ -54,6 +54,10 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
         });
         return;
       }
+
+      // Get user session for userId
+      final userData = await SessionManager.getUserSession();
+      final userId = userData?['userId'] ?? userData?['_id'];
 
       // Get user's health profile
       final profileResponse = await ProfileService.getProfile();
