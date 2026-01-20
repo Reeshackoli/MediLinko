@@ -97,6 +97,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
         return;
       }
 
+      if (!mounted) return;
       setState(() {
         _statusMessage = 'Uploading to emergency service...';
       });
@@ -111,6 +112,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
         // Fetch the QR URL
         final qrUrl = await EmergencyWebService.getQRCodeUrl();
         
+        if (!mounted) return;
         setState(() {
           _isSyncing = false;
           _syncSuccess = true;
@@ -118,6 +120,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
           _statusMessage = 'Emergency profile synced successfully!';
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _isSyncing = false;
           _syncSuccess = false;
@@ -126,6 +129,7 @@ class _SyncEmergencyScreenState extends State<SyncEmergencyScreen> {
       }
     } catch (e) {
       debugPrint('❌ Sync error: $e');
+      if (!mounted) return;
       setState(() {
         _isSyncing = false;
         _syncSuccess = false;

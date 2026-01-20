@@ -36,7 +36,7 @@ class _PharmacistDashboardScreenState extends ConsumerState<PharmacistDashboardS
     );
 
     _actionControllers = List.generate(
-      3,
+      4,  // Updated to 4 for the Health Assistant card
       (index) => AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -267,6 +267,15 @@ class _PharmacistDashboardScreenState extends ConsumerState<PharmacistDashboardS
                     AppTheme.accentPurple,
                     const Color(0xFFE9D5FF),
                     () => context.push('/pharmacist-dashboard/profile'),
+                  ),
+                  _buildAnimatedActionCard(
+                    3,
+                    Icons.chat_bubble_rounded,
+                    'Health Assistant',
+                    'AI-powered health chat',
+                    AppTheme.warningColor,
+                    const Color(0xFFFEF3C7),
+                    () => context.push('/health-chat'),
                   ),
                 ],
               ]),

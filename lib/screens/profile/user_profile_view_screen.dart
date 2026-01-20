@@ -13,7 +13,7 @@ class UserProfileViewScreen extends ConsumerStatefulWidget {
   ConsumerState<UserProfileViewScreen> createState() => _UserProfileViewScreenState();
 }
 
-class _UserProfileViewScreenState extends ConsumerState<UserProfileViewScreen> {
+class _UserProfileViewScreenState extends ConsumerState<UserProfileViewScreen> with RouteAware {
   String? _qrCodeUrl;
   bool _loadingQR = true;
 
@@ -23,8 +23,26 @@ class _UserProfileViewScreenState extends ConsumerState<UserProfileViewScreen> {
     _loadQRCodeUrl();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh QR code when returning to this screen
+  }
+
+  /// Called when returning to this screen (e.g., from sync screen)
+  void refreshQRCode() {
+    _loadQRCodeUrl();
+  }
+
   Future<void> _loadQRCodeUrl() async {
+    if (!mounted) return;
+    setState(() {
+      _loadingQR = true;
+    });
+    
     final url = await EmergencyWebService.getQRCodeUrl();
+    debugPrint('🔍 Profile screen loaded QR URL: $url');
+    
     if (mounted) {
       setState(() {
         _qrCodeUrl = url;
@@ -43,7 +61,10 @@ class _UserProfileViewScreenState extends ConsumerState<UserProfileViewScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(healthProfileProvider),
+            onPressed: () {
+              ref.invalidate(healthProfileProvider);
+              _loadQRCodeUrl(); // Also refresh QR code
+            },
             tooltip: 'Refresh',
           ),
           IconButton(
@@ -408,7 +429,11 @@ class _UserProfileViewScreenState extends ConsumerState<UserProfileViewScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
-                      onPressed: () => context.push('/sync-emergency'),
+                      onPressed: () async {
+                        await context.push('/sync-emergency');
+                        // Refresh QR code after returning from sync screen
+                        _loadQRCodeUrl();
+                      },
                       icon: const Icon(Icons.sync, size: 18),
                       label: const Text('Sync Emergency Profile'),
                       style: ElevatedButton.styleFrom(

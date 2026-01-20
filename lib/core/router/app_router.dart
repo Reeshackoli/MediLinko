@@ -52,6 +52,9 @@ import '../../screens/prescriptions/prescription_details_screen.dart';
 import '../../screens/emergency/emergency_screen.dart';
 import '../../screens/emergency/sync_emergency_screen.dart';
 
+// --- Chat ---
+import '../../screens/chat/healthcare_chat_screen.dart';
+
 // --- Notifications ---
 import '../../screens/notifications/notifications_screen.dart';
 
@@ -89,6 +92,12 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/sync-emergency',
       builder: (context, state) => const SyncEmergencyScreen(),
+    ),
+    
+    // ------------------- Healthcare Chat -------------------
+    GoRoute(
+      path: '/health-chat',
+      builder: (context, state) => const HealthcareChatScreen(),
     ),
     
     // ------------------- Notifications -------------------

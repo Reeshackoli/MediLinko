@@ -77,7 +77,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
 
     // Staggered animations for action cards
     _actionControllers = List.generate(
-      5,  // Updated to 5 for the new prescriptions card
+      6,  // Updated to 6 for the Health Assistant card
       (index) => AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -314,6 +314,14 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen>
                       AppTheme.accentPurple,
                       const Color(0xFFE9D5FF),
                       () => context.push('/user/prescriptions'),
+                    ),
+                    _buildAnimatedActionCard(
+                      5,
+                      Icons.chat_bubble_rounded,
+                      'Health\nAssistant',
+                      const Color(0xFF10B981),
+                      const Color(0xFFD1FAE5),
+                      () => context.push('/health-chat'),
                     ),
                   ],
                 ),

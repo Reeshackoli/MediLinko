@@ -61,7 +61,7 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
     );
 
     _actionControllers = List.generate(
-      4,  // Updated to 4 for the prescriptions card
+      5,  // Updated to 5 for the Health Assistant card
       (index) => AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -300,6 +300,15 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen>
                     AppTheme.accentPurple,
                     const Color(0xFFE9D5FF),
                     () => context.push('/doctor-dashboard/profile'),
+                  ),
+                  _buildAnimatedActionCard(
+                    4,
+                    Icons.chat_bubble_rounded,
+                    'Health Assistant',
+                    'AI-powered health chat',
+                    AppTheme.warningColor,
+                    const Color(0xFFFEF3C7),
+                    () => context.push('/health-chat'),
                   ),
                 ],
               ]),
