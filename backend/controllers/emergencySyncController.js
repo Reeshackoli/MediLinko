@@ -12,8 +12,8 @@ try {
 }
 
 // Configure emergencyMed service URLs
-const EMERGENCY_MED_URL = process.env.EMERGENCY_MED_URL || 'http://localhost:5000';
-const EMERGENCY_WEB_URL = process.env.EMERGENCY_WEB_URL || 'http://localhost:3001';
+const EMERGENCY_MED_URL = process.env.EMERGENCY_MED_URL || 'https://medilinko-emergency-backend.onrender.com';
+const EMERGENCY_WEB_URL = process.env.EMERGENCY_WEB_URL || 'https://medilinkoweb-emergency-frontend.onrender.com';
 
 /**
  * Generate a unique qrCodeId for a user
