@@ -1,5 +1,14 @@
 const axios = require('axios');
-const QRCode = require('qrcode');
+
+// QRCode module with fallback for environments where it might not be available
+let QRCode;
+try {
+  QRCode = require('qrcode');
+  console.log('✅ QRCode module loaded successfully');
+} catch (error) {
+  console.error('⚠️ QRCode module not available:', error.message);
+  QRCode = null;
+}
 
 // Configure emergencyMed service URLs
 const EMERGENCY_MED_URL = process.env.EMERGENCY_MED_URL || 'http://localhost:5000';
@@ -197,6 +206,14 @@ exports.checkEmergencyService = async (req, res) => {
  */
 exports.generateQRCode = async (req, res) => {
   try {
+    // Check if QRCode module is available
+    if (!QRCode) {
+      return res.status(503).json({
+        success: false,
+        message: 'QR code generation is not available',
+      });
+    }
+
     const userId = req.user.userId;
     
     // Get emergency user ID from emergencyMed backend
@@ -244,6 +261,14 @@ exports.generateQRCode = async (req, res) => {
  */
 exports.getQRCodeDataUrl = async (req, res) => {
   try {
+    // Check if QRCode module is available
+    if (!QRCode) {
+      return res.status(503).json({
+        success: false,
+        message: 'QR code generation is not available',
+      });
+    }
+
     const userId = req.user.userId;
     
     // Get emergency user ID from emergencyMed backend
@@ -292,6 +317,20 @@ exports.getQRCodeDataUrl = async (req, res) => {
  */
 exports.displayQRCodePage = async (req, res) => {
   try {
+    // Check if QRCode module is available
+    if (!QRCode) {
+      return res.status(503).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Service Unavailable</title></head>
+        <body style="font-family: sans-serif; padding: 40px; text-align: center;">
+          <h1>⚠️ QR Code Service Unavailable</h1>
+          <p>QR code generation is temporarily unavailable.</p>
+        </body>
+        </html>
+      `);
+    }
+
     const userId = req.user.userId;
     
     // Get emergency user ID from emergencyMed backend
